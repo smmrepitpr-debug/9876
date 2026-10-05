@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --linen:#F4EDE3; --cream:#FBF7F1; --clay:#C4704F; --sage:#7F9474;
+    --ink:#2E2723; --muted:#7A6A5F; --gold:#C9A46A;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--linen);font-family:Manrope,sans-serif;color:var(--ink);overflow:hidden}
+  .stage{position:relative;overflow:hidden;background:
+    radial-gradient(ellipse at 15% 20%, #fff8 0, transparent 50%),
+    radial-gradient(ellipse at 85% 90%, #e8d8c4 0, transparent 55%), var(--linen)}
+  .grain{position:absolute;inset:0;opacity:.18;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E")}
+  svg.thread{position:absolute;inset:0;width:100%;height:100%}
+  .thread path{fill:none;stroke-linecap:round}
+  .serif{font-family:"Cormorant Garamond",serif}
+  .kicker{letter-spacing:.32em;text-transform:uppercase;font-weight:600;color:var(--clay)}
+  .title{font-weight:600;line-height:.9;color:var(--ink)}
+  .title i{color:var(--clay);font-style:italic}
+  .sub{color:var(--muted);font-weight:400}
+  .chips{display:flex;gap:14px;flex-wrap:wrap}
+  .chip{border:2px solid #2E272330;border-radius:999px;padding:.45em 1.1em;font-weight:600;background:#fff6}
+  .cta{display:inline-block;background:var(--clay);color:#fff;border-radius:999px;font-weight:700;padding:.75em 1.6em}
+  .knot{position:absolute;border-radius:50%}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const P = new URLSearchParams(location.search);
+const mode = P.get('m') || 'cover';
+const t = parseFloat(P.get('t') || '1'); // 0..1 progress for animation frames
+const root = document.getElementById('root');
+
+// a soft yarn line drawn across the canvas; dash offset animates "stitching"
+function thread(w,h,seed,color,width,prog){
+  const pts=[];const n=7;
+  for(let i=0;i<=n;i++){const x=w*i/n;const y=h*(0.5+0.32*Math.sin(i*1.3+seed))+h*0.08*Math.cos(i*2.7+seed*2);pts.push([x,y])}
+  let d=`M${-40},${pts[0][1]}`;
+  for(let i=1;i<pts.length;i++){const [x0,y0]=pts[i-1],[x1,y1]=pts[i];const cx=(x0+x1)/2;d+=` C${cx},${y0} ${cx},${y1} ${x1+(i==n?40:0)},${y1}`}
+  const L=w*2.2;
+  return `<path d="${d}" stroke="${color}" stroke-width="${width}" stroke-dasharray="${L}" stroke-dashoffset="${L*(1-prog)}"/>`;
+}
+function threads(w,h,prog){
+  return `<svg class="thread" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    ${thread(w,h,0.4,'#C4704F',6,prog)}
+    ${thread(w,h,2.1,'#7F9474',4,Math.max(0,prog*1.2-0.2))}
+    ${thread(w,h,4.0,'#C9A46A',3,Math.max(0,prog*1.4-0.4))}
+    ${thread(w,h,5.3,'#2E272355',2,Math.max(0,prog*1.6-0.6))}
+  </svg>`;
+}
+function knots(list){return list.map(([x,y,s,c])=>`<div class="knot" style="left:${x}px;top:${y}px;width:${s}px;height:${s}px;background:${c}"></div>`).join('')}
+
+if(mode==='cover'){ // VK desktop cover 1920x768, key content in central ~1200px
+  const w=1920,h=768;
+  root.innerHTML=`<div class="stage" style="width:${w}px;height:${h}px">
+    ${threads(w,h,1)}<div class="grain"></div>
+    <div style="position:absolute;left:360px;right:360px;top:150px;bottom:130px;display:flex;flex-direction:column;justify-content:center;background:#FBF7F1e6;border-radius:28px;padding:0 70px;box-shadow:0 20px 60px #2e272318">
+      <div class="kicker" style="font-size:22px">покупай у своих · ручная работа</div>
+      <div class="title serif" style="font-size:128px;margin:14px 0 10px">Ярмарка <i>мастеров</i></div>
+      <div class="sub" style="font-size:30px;margin-bottom:26px">Вещи с душой от местных мастеров — покупай у своих</div>
+      <div class="chips" style="font-size:22px"><span class="chip">вязание</span><span class="chip">бижутерия</span><span class="chip">керамика</span><span class="chip">макраме</span><span class="chip">декор</span></div>
+    </div></div>`;
+}
+if(mode==='mobile'){ // VK mobile cover 1080x1920
+  const w=1080,h=1920;
+  root.innerHTML=`<div class="stage" style="width:${w}px;height:${h}px">
+    ${threads(w,h,1)}<div class="grain"></div>
+    <div style="position:absolute;left:90px;right:90px;top:560px;padding:70px 60px;background:#FBF7F1ee;border-radius:36px;box-shadow:0 20px 60px #2e272318">
+      <div class="kicker" style="font-size:26px">покупай у своих</div>
+      <div class="title serif" style="font-size:150px;margin:18px 0">Ярмарка <i>мастеров</i></div>
+      <div class="sub" style="font-size:40px;line-height:1.35;margin-bottom:40px">Вещи ручной работы от местных мастеров. Покупай у своих 🤍</div>
+      <div class="chips" style="font-size:30px;margin-bottom:46px"><span class="chip">вязание</span><span class="chip">бижутерия</span><span class="chip">керамика</span><span class="chip">макраме</span></div>
+      <span class="cta" style="font-size:34px">Ты мастер? Напиши нам →</span>
+    </div></div>`;
+}
+if(mode==='avatar'){
+  const w=800,h=800;
+  root.innerHTML=`<div class="stage" style="width:${w}px;height:${h}px;background:var(--clay)">
+    <svg class="thread" viewBox="0 0 800 800"><circle cx="400" cy="400" r="300" fill="none" stroke="#FBF7F1" stroke-width="5" stroke-dasharray="14 14"/>
+    <path d="M150 560 C300 420 500 700 650 520" stroke="#C9A46A" stroke-width="10" fill="none" stroke-linecap="round"/></svg>
+    <div class="serif" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:380px;font-weight:600;color:#FBF7F1;padding-bottom:40px">Я</div>
+  </div>`;
+}
+if(mode==='video'){ // 1080x1920 pinned clip, t = 0..1 over 15 s
+  const w=1080,h=1920;
+  const sc=[ // [start,end, kicker, big, small]
+    [0.00,0.25,'знакомьтесь','Ярмарка <i>мастеров</i>','вещи ручной работы от местных мастеров'],
+    [0.25,0.50,'здесь','вещи <i>с душой</i>','вязание · бижутерия · керамика · макраме'],
+    [0.50,0.75,'покупай','у <i>своих</i>','каждая покупка — поддержка живого мастера'],
+    [0.75,1.01,'ты мастер?','расскажем <i>о тебе</i>','бесплатный пост за репост — пиши в сообщения'],
+  ];
+  const s=sc.find(x=>t>=x[0]&&t<x[1]);
+  const local=(t-s[0])/(s[1]-s[0]);
+  const fade=Math.min(1,local*6,(1-local)*6+ (s[1]>1?1:0));
+  const lift=(1-Math.min(1,local*5))*40;
+  root.innerHTML=`<div class="stage" style="width:${w}px;height:${h}px">
+    ${threads(w,h,Math.min(1,t*1.3))}<div class="grain"></div>
+    <div style="position:absolute;left:90px;right:90px;top:640px;opacity:${fade};transform:translateY(${lift}px)">
+      <div class="kicker" style="font-size:34px">${s[2]}</div>
+      <div class="title serif" style="font-size:${s[3].length>22?140:s[3].length>14?150:220}px;margin:24px 0 36px">${s[3]}</div>
+      <div class="sub" style="font-size:44px;line-height:1.35">${s[4]}</div>
+      ${t>0.75?`<div style="margin-top:56px"><span class="cta" style="font-size:40px">Написать в сообщения →</span></div>`:''}
+    </div>
+    <div style="position:absolute;bottom:120px;left:0;right:0;text-align:center" class="kicker"><span style="font-size:28px;color:var(--muted)">Ярмарка мастеров · покупай у своих</span></div>
+  </div>`;
+}
+</script>
+</body>
+</html>
