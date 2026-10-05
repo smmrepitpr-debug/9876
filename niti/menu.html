@@ -1,0 +1,9 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{margin:0;box-sizing:border-box}body{width:376px;height:256px;overflow:hidden}
+.b{width:376px;height:256px;display:flex;flex-direction:column;justify-content:center;padding:0 30px;position:relative;font-family:"DejaVu Serif",serif}
+.e{font-size:54px;margin-bottom:10px}.t{font-size:32px;font-weight:700;line-height:1.05}.s{font-family:"DejaVu Sans";font-size:15px;margin-top:10px;opacity:.8;letter-spacing:.08em;text-transform:uppercase}
+svg{position:absolute;right:-10px;bottom:-10px;opacity:.5}
+</style></head><body><script>
+const m={1:['#C4704F','#FBF7F1','🛍','Каталог<br>мастеров','все мастера ярмарки'],2:['#F4EDE3','#2E2723','✨','Стать<br>мастером','бесплатный пост'],3:['#7F9474','#FBF7F1','💬','Отзывы<br>покупателей','делитесь впечатлениями']}[new URLSearchParams(location.search).get('n')];
+document.body.innerHTML=`<div class="b" style="background:${m[0]};color:${m[1]}"><div class="e">${m[2]}</div><div class="t">${m[3]}</div><div class="s">${m[4]}</div><svg width="200" height="140"><path d="M10 120 C60 20 120 140 190 30" stroke="#C9A46A" stroke-width="5" fill="none" stroke-linecap="round"/></svg></div>`;
+</script></body></html>
