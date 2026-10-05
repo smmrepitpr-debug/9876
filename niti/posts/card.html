@@ -1,0 +1,20 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{margin:0;box-sizing:border-box}body{width:1080px;height:1350px;overflow:hidden;font-family:"DejaVu Sans",sans-serif}
+.s{position:relative;width:1080px;height:1350px;padding:120px 100px;display:flex;flex-direction:column;justify-content:center}
+.k{font-size:30px;letter-spacing:.3em;text-transform:uppercase;font-weight:700}
+.b{font-family:"DejaVu Serif",serif;font-weight:700;font-size:118px;line-height:1.02;margin:30px 0 40px}
+.b i{font-style:italic}
+.m{font-size:42px;line-height:1.35;opacity:.85}
+.f{position:absolute;left:100px;bottom:90px;font-size:26px;letter-spacing:.25em;text-transform:uppercase;opacity:.7}
+svg{position:absolute;inset:0}
+</style></head><body><script>
+const q=new URLSearchParams(location.search);const i=+q.get('i');
+const P=[['#F4EDE3','#2E2723','#C4704F'],['#C4704F','#FBF7F1','#F4D9A8'],['#7F9474','#FBF7F1','#F4EDE3'],['#2E2723','#F4EDE3','#C9A46A']][i%4];
+Promise.resolve(window.DATA).then(a=>{const p=a[i];
+const y=200+ (i*137)%300;
+document.body.innerHTML=`<div class="s" style="background:${P[0]};color:${P[1]}">
+<svg viewBox="0 0 1080 1350"><path d="M-20 ${y} C300 ${y-180} 600 ${y+220} 1100 ${y-60}" stroke="${P[2]}" stroke-width="7" fill="none" stroke-linecap="round" opacity=".7"/>
+<path d="M-20 ${1250-y/3} C350 ${1100-y/3} 700 ${1350-y/3} 1100 ${1150-y/3}" stroke="${P[2]}" stroke-width="4" fill="none" opacity=".45"/></svg>
+<div style="position:relative"><div class="k" style="color:${P[2]}">${p.kicker}</div><div class="b">${p.big}</div><div class="m">${p.small}</div></div>
+<div class="f">покупай у своих · ярмарка мастеров</div></div>`;document.title='done'});
+</script></body></html>
