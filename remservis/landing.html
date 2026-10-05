@@ -1,0 +1,142 @@
+<title>РемСервис для мастерских</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap">
+<style>
+/* Layout: продающий лендинг одной колонкой; герой с макетом экрана справа, далее блоки «как работает», роли, ниши, команда, цена, подключение. */
+:root{
+  --bg:#F5F2FC; --surface:#FFFFFF; --ink:#1E1830; --muted:#5E5672; --line:#E4DCF7;
+  --a1:#6D3CF0; --a2:#F45C8A; --accent:#6D3CF0; --accent-ink:#FFFFFF; --soft:#EFE8FF; --ok:#1E8A55; --ok-bg:#E3F4EB;
+  --font:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141020; --surface:#1D182B; --ink:#EFEAF8; --muted:#A79FBA; --line:#302848;
+  --accent:#A889FF; --accent-ink:#141020; --soft:#2A2240; --ok:#5BD196; --ok-bg:#163326; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141020; --surface:#1D182B; --ink:#EFEAF8; --muted:#A79FBA; --line:#302848;
+  --accent:#A889FF; --accent-ink:#141020; --soft:#2A2240; --ok:#5BD196; --ok-bg:#163326; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--font)}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:16px;padding-block:24px 64px;display:grid;gap:56px}
+h1,h2,h3{margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-size:clamp(24px,3.4vw,34px);font-weight:800}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.lead{color:var(--muted);font-size:18px;max-width:62ch}
+.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:32px;align-items:center;background:linear-gradient(120deg,var(--a1),#C24FC0 58%,var(--a2));color:#fff;border-radius:28px;padding:40px}
+.hero h1{font-size:clamp(30px,4.8vw,50px);font-weight:800;line-height:1.05}
+.hero p{font-size:19px;opacity:.95;margin:16px 0 24px;max-width:52ch}
+.btn{display:inline-block;background:#fff;color:#4B22C9;font-weight:800;border-radius:14px;padding:14px 22px;text-decoration:none}
+.btn.ghost{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.7);margin-left:8px}
+.btn:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.mock{background:#fff;color:#1E1830;border-radius:22px;padding:18px;box-shadow:0 24px 60px rgba(30,24,48,.35);display:grid;gap:10px;min-width:0}
+.mock .bar{display:flex;gap:10px;align-items:center}
+.mock .lg{width:40px;height:40px;border-radius:12px;background:linear-gradient(120deg,#6D3CF0,#F45C8A);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}
+.mock .row{display:flex;justify-content:space-between;gap:8px;background:#F5F2FC;border-radius:12px;padding:10px 12px;font-size:14px}
+.mock .st{font-weight:700;border-radius:999px;padding:2px 10px;font-size:12px}
+.s1{background:#FFF1DC;color:#B86A00}.s2{background:#EFE8FF;color:#6D3CF0}.s3{background:#E3F4EB;color:#1E8A55}
+.mock .price{display:flex;justify-content:space-between;align-items:center;background:#EFE8FF;border-radius:12px;padding:12px;font-weight:800;color:#6D3CF0}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px;min-width:0}
+.card h3{font-size:19px;font-weight:800;margin-bottom:8px}
+.card p,.card li{color:var(--muted)}
+.card ul{margin:0;padding-left:20px;display:grid;gap:6px}
+.num{width:36px;height:36px;border-radius:12px;background:linear-gradient(120deg,var(--a1),var(--a2));color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.section{display:grid;gap:20px}
+.pain{background:var(--soft);border-radius:22px;padding:26px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.pain div{font-weight:700}
+.pain small{display:block;color:var(--muted);font-weight:500;margin-top:4px}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-weight:700}
+.chip.on{background:linear-gradient(120deg,var(--a1),var(--a2));color:#fff;border-color:transparent}
+.team .who{font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em}
+.price-card{background:var(--surface);border:2px solid var(--accent);border-radius:24px;padding:28px;display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center}
+.big{font-size:44px;font-weight:800;font-variant-numeric:tabular-nums}
+.big small{font-size:18px;color:var(--muted);font-weight:600}
+.tag{display:inline-block;background:var(--ok-bg);color:var(--ok);font-weight:800;border-radius:999px;padding:4px 12px;font-size:14px}
+.cta{background:#1E1830;color:#fff;border-radius:28px;padding:36px;display:grid;gap:14px;text-align:center;justify-items:center}
+.cta p{opacity:.85;max-width:56ch;margin:0}
+.contact{font-size:20px;font-weight:800;background:rgba(255,255,255,.1);border-radius:14px;padding:12px 18px;user-select:all}
+.foot{text-align:center;color:var(--muted);font-size:14px}
+@media (max-width:820px){.hero,.price-card{grid-template-columns:1fr}.grid3,.pain{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.hero{padding:26px}.btn.ghost{margin:10px 0 0}}
+</style>
+
+<div class="wrap">
+  <section class="hero">
+    <div>
+      <div class="eyebrow" style="color:#fff;opacity:.85">Команда автоматизации бизнеса</div>
+      <h1>Заявки и статус ремонта — онлайн. Без звонков «ну что там с моим телефоном?»</h1>
+      <p>«РемСервис» — готовая система для мастерских по ремонту техники. Клиент оставляет заявку, сразу видит примерную цену и сам отслеживает ремонт по коду.</p>
+      <a class="btn" href="#connect">Подключить мастерскую</a><a class="btn ghost" href="#how">Как это работает</a>
+    </div>
+    <div class="mock" aria-label="Пример экрана сервиса">
+      <div class="bar"><div class="lg">Р</div><b>Ваша мастерская</b></div>
+      <div class="row"><span>iPhone 13 · треснул экран</span><span class="st s2">В ремонте</span></div>
+      <div class="row"><span>Samsung A52 · не заряжается</span><span class="st s1">Диагностика</span></div>
+      <div class="row"><span>Ноутбук HP · чистка</span><span class="st s3">Готово</span></div>
+      <div class="price"><span>Предварительная оценка</span><span>от 2 800 ₽</span></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="eyebrow">Знакомо?</div>
+    <h2>Мастер чинит, а телефон звонит</h2>
+    <div class="pain">
+      <div>«Ну что там, готово?»<small>клиенты звонят по 2–3 раза за ремонт</small></div>
+      <div>Заявки в тетради и мессенджерах<small>что-то теряется, кто взял — непонятно</small></div>
+      <div>«Сколько будет стоить?»<small>одни и те же вопросы по цене каждый день</small></div>
+    </div>
+  </section>
+
+  <section class="section" id="how">
+    <div class="eyebrow">Как работает</div>
+    <h2>Три роли — у каждого свой кабинет</h2>
+    <div class="grid3">
+      <div class="card"><div class="num">1</div><h3>Клиент</h3><ul><li>оставляет заявку с сайта или из ВК</li><li>сразу видит оценку «от 2 800 ₽»</li><li>получает код и сам смотрит статус ремонта</li></ul></div>
+      <div class="card"><div class="num">2</div><h3>Мастер</h3><ul><li>входит по своему номеру телефона</li><li>видит только свои заявки</li><li>меняет статус: диагностика → ремонт → готово</li></ul></div>
+      <div class="card"><div class="num">3</div><h3>Владелец</h3><ul><li>вход по номеру телефона, без паролей</li><li>своё название, логотип и цены</li><li>добавляет мастеров, назначает заявки, видит всё</li></ul></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="eyebrow">Не только ремонт техники</div>
+    <h2>Настраиваем под вашу нишу</h2>
+    <p class="lead">Та же основа подходит любому бизнесу, где есть заявки и клиенту важно знать статус. Поля, статусы и цены — под ваш процесс.</p>
+    <div class="chips"><span class="chip on">Ремонт телефонов и техники</span><span class="chip">Автосервисы и шиномонтаж</span><span class="chip">Химчистки и ремонт обуви</span><span class="chip">Салоны красоты — онлайн-запись</span><span class="chip">Ремонт мебели, окна, потолки</span><span class="chip">Мастера на час и курьеры</span></div>
+  </section>
+
+  <section class="section team">
+    <div class="eyebrow">Кто мы</div>
+    <h2>Команда, которая доводит до результата</h2>
+    <div class="grid3">
+      <div class="card"><div class="who">Руководитель проекта</div><h3>Стратегия и качество</h3><p>Отвечает за результат для каждого клиента и развитие продукта.</p></div>
+      <div class="card"><div class="who">Внедрение и поддержка</div><h3>Запуск под ключ</h3><p>Настраиваем сервис под вашу мастерскую, обучаем мастеров, на связи после запуска.</p></div>
+      <div class="card"><div class="who">Разработка</div><h3>Сервисы под нишу</h3><p>Дорабатываем функции под ваш процесс и выпускаем обновления.</p></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="eyebrow">Цена</div>
+    <div class="price-card">
+      <div><span class="tag">Первый месяц — бесплатно</span><div class="big" style="margin-top:12px">990 ₽ <small>в месяц</small></div><p style="color:var(--muted);margin:6px 0 0">Подключение и настройка под вас — 2 990 ₽ разово. При оплате за год — 9 900 ₽ вместо 11 880 ₽.</p></div>
+      <ul style="margin:0;padding-left:20px;display:grid;gap:8px;color:var(--muted)"><li>ваше название, логотип и цены</li><li>неограниченно заявок и мастеров</li><li>сервер, обновления и поддержка включены</li><li>обучение мастеров при запуске</li><li>без договора на год — можно отменить в любой месяц</li></ul>
+    </div>
+  </section>
+
+  <section class="section" id="connect">
+    <div class="eyebrow">Подключение</div>
+    <h2>Запуск за один день</h2>
+    <div class="grid3">
+      <div class="card"><div class="num">1</div><h3>Пишете нам</h3><p>Присылаете название, логотип и список услуг с ценами.</p></div>
+      <div class="card"><div class="num">2</div><h3>Настраиваем</h3><p>Собираем сервис под вас и присылаем ссылку для клиентов и вход для мастеров.</p></div>
+      <div class="card"><div class="num">3</div><h3>Работаете</h3><p>Ставите ссылку в ВК, на сайт и в 2ГИС — заявки идут в систему.</p></div>
+    </div>
+  </section>
+
+  <section class="cta">
+    <h2>Покажем демо с названием вашей мастерской</h2>
+    <p>Напишите — пришлём ссылку, где ваш сервис уже настроен. Посмотреть займёт 2 минуты.</p>
+    <div class="contact">[Telegram / ВК / телефон — вписать]</div>
+  </section>
+
+  <div class="foot">Персональные данные клиентов обрабатываются в соответствии с 152-ФЗ.</div>
+</div>
