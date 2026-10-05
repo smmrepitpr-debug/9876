@@ -1,0 +1,16 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+<style>*{margin:0}body{width:640px;height:640px;overflow:hidden;font-family:Manrope,sans-serif}
+.a{width:640px;height:640px;background:linear-gradient(135deg,#6D3CF0,#C24FC0 58%,#F45C8A);display:flex;align-items:center;justify-content:center;position:relative}
+.ring{position:absolute;width:430px;height:430px;border-radius:50%;border:6px dashed rgba(255,255,255,.35)}
+.t{color:#fff;text-align:center}
+.big{font-weight:800;font-size:250px;line-height:1}
+.sm{font-weight:800;font-size:46px;letter-spacing:.04em;margin-top:6px}
+.b2{width:640px;height:640px;background:#1E1830;display:flex;align-items:center;justify-content:center}
+.tile{width:330px;height:330px;border-radius:84px;background:linear-gradient(135deg,#6D3CF0,#F45C8A);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:200px;box-shadow:0 30px 80px rgba(244,92,138,.35)}
+</style></head><body><script>
+const v=new URLSearchParams(location.search).get('v');
+document.body.innerHTML = v==='2'
+ ? '<div class="b2"><div class="tile">Р</div></div>'
+ : '<div class="a"><div class="ring"></div><div class="t"><div class="big">Р</div><div class="sm">РемСервис</div></div></div>';
+</script></body></html>
