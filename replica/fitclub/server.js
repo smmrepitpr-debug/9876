@@ -34,7 +34,9 @@ CREATE TABLE IF NOT EXISTS memberships(id INTEGER PRIMARY KEY, user_id INTEGER N
 CREATE TABLE IF NOT EXISTS transactions(id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), amount INTEGER NOT NULL, title TEXT NOT NULL, created TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS visits(id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), club_id INTEGER NOT NULL, at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS news(id INTEGER PRIMARY KEY, club_id INTEGER NOT NULL REFERENCES clubs(id), title TEXT NOT NULL, body TEXT NOT NULL, created TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS notifications(id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), text TEXT NOT NULL, read INTEGER DEFAULT 0, created TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS notifications(id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), text TEXT NOT NULL, read INTEGER DEFAULT 0, created TEXT NOT NULL, link_type TEXT, link_id INTEGER);
+CREATE TABLE IF NOT EXISTS favorites(trainer_id INTEGER NOT NULL, client_id INTEGER NOT NULL, PRIMARY KEY(trainer_id,client_id));
+CREATE TABLE IF NOT EXISTS work_hours(trainer_id INTEGER NOT NULL, weekday INTEGER NOT NULL, start TEXT, end TEXT, PRIMARY KEY(trainer_id,weekday));
 CREATE TABLE IF NOT EXISTS notes(trainer_id INTEGER NOT NULL, client_id INTEGER NOT NULL, text TEXT NOT NULL, PRIMARY KEY(trainer_id,client_id));
 `);
 
@@ -48,7 +50,10 @@ function hash(p, salt = crypto.randomBytes(16).toString('hex')) { return salt + 
 function check(p, h) { const [s, k] = h.split(':'); const a = Buffer.from(k, 'hex'), b = crypto.scryptSync(p, s, 32); return crypto.timingSafeEqual(a, b); }
 const normPhone = p => String(p || '').replace(/\D/g, '').replace(/^8/, '7');
 class E extends Error { constructor(code, msg) { super(msg); this.code = code; } }
-const notify = (uid, text) => run('INSERT INTO notifications(user_id,text,created) VALUES(?,?,?)', uid, text, now());
+const notify = (uid, text, linkType = null, linkId = null) => run('INSERT INTO notifications(user_id,text,created,link_type,link_id) VALUES(?,?,?,?,?)', uid, text, now(), linkType, linkId);
+const MSK = { timeZone: 'Europe/Moscow' };
+const dayRange = c => { const s = new Date(c.start), e = new Date(s.getTime() + c.minutes * 6e4), t = d => d.toLocaleTimeString('ru-RU', { ...MSK, hour: '2-digit', minute: '2-digit' });
+  return `${s.toLocaleDateString('ru-RU', { ...MSK, day: 'numeric', month: 'long' })}, ${t(s)}–${t(e)}`; };
 const fmt = iso => new Date(iso).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Moscow' });
 
 // ---------- seed ----------
@@ -86,6 +91,10 @@ if (!one('SELECT 1 x FROM clubs')) tx(() => {
   const p = (t, c, hours, st) => run('INSERT INTO personal(club_id,trainer_id,client_id,start,status) VALUES(1,?,?,?,?)', t, c, new Date(base.getTime() + hours * 36e5).toISOString(), st);
   p(t1, others[0], 6, 'planned'); p(t1, others[1], 14, 'planned'); p(t1, others[2], 32, 'planned'); p(t1, others[1], -40, 'done');
   run('INSERT INTO notes VALUES(?,?,?)', t1, others[0], 'Колено — без прыжков');
+  run('INSERT INTO favorites VALUES(?,?)', t1, others[0]);
+  const lastCls = one('SELECT * FROM classes WHERE trainer_id=? AND start>? ORDER BY start LIMIT 1', t1, now());
+  if (lastCls) notify(t1, `Новая запись на «${lastCls.name}»: ${dayRange(lastCls)}. Записано 1 из ${lastCls.cap}`, 'class', lastCls.id);
+  for (let w = 0; w < 5; w++) run("INSERT INTO work_hours VALUES(?,?,'08:00','21:00')", t1, w);
 });
 
 // ---------- domain ----------
@@ -168,13 +177,14 @@ R('GET', '/api/schedule', 'any', ({ u, query }) => {
 R('POST', '/api/classes/:id/book', 'client', ({ u, params }) => tx(() => {
   const c = one('SELECT * FROM classes WHERE id=?', +params.id); if (!c) throw new E(404, 'Занятие не найдено');
   if (new Date(c.start) < new Date()) throw new E(400, 'Занятие уже прошло');
-  if (!activeMembership(u.id, c.club_id) && !packOf(u.id, c.club_id)) throw new E(402, 'Нет действующего абонемента в этом клубе');
   if (one("SELECT 1 x FROM bookings WHERE class_id=? AND user_id=? AND status<>'cancelled'", c.id, u.id)) throw new E(409, 'Вы уже записаны');
   const booked = one("SELECT COUNT(*) n FROM bookings WHERE class_id=? AND status='booked'", c.id).n;
   const status = booked >= c.cap ? 'waitlist' : 'booked';
   run('INSERT INTO bookings(class_id,user_id,status,created) VALUES(?,?,?,?)', c.id, u.id, status, now());
-  notify(u.id, status === 'booked' ? `Вы записаны на «${c.name}» ${fmt(c.start)}` : `Вы в листе ожидания на «${c.name}» ${fmt(c.start)}`);
-  return { status };
+  const paid = !!(activeMembership(u.id, c.club_id) || packOf(u.id, c.club_id));
+  notify(u.id, (status === 'booked' ? `Вы записаны на «${c.name}» ${fmt(c.start)}` : `Вы в листе ожидания на «${c.name}» ${fmt(c.start)}`) + (paid ? '' : '. Занятие не оплачено — купите абонемент'));
+  if (c.trainer_id && status === 'booked') notify(c.trainer_id, `Новая запись на «${c.name}»: ${dayRange(c)}. Записано ${one("SELECT COUNT(*) n FROM bookings WHERE class_id=? AND status='booked'", c.id).n} из ${c.cap}`, 'class', c.id);
+  return { status, paid };
 }));
 R('POST', '/api/classes/:id/cancel', 'client', ({ u, params }) => tx(() => {
   const b = one("SELECT * FROM bookings WHERE class_id=? AND user_id=? AND status IN('booked','waitlist')", +params.id, u.id);
@@ -194,6 +204,7 @@ R('POST', '/api/personal', 'any', ({ u }, b) => tx(() => {
   // client books themself; trainer books a client
   const isTrainer = u.role === 'trainer';
   const trainer = isTrainer ? u.id : +b.trainer_id, client = isTrainer ? +b.client_id : u.id, club = +b.club_id || (isTrainer ? one('SELECT club_id FROM trainer_clubs WHERE trainer_id=?', u.id).club_id : u.club_id);
+  if (isTrainer && b.club_id && !canTrainAt(u.id, club)) throw new E(403, 'Вы не работаете в этом клубе');
   if (!one("SELECT 1 x FROM users WHERE id=? AND role='client'", client)) throw new E(404, 'Клиент не найден');
   if (!canTrainAt(trainer, club)) throw new E(400, 'Тренер не работает в этом клубе');
   const start = new Date(b.start); if (isNaN(start) || start < new Date()) throw new E(400, 'Неверное время');
@@ -202,7 +213,7 @@ R('POST', '/api/personal', 'any', ({ u }, b) => tx(() => {
   const id = run("INSERT INTO personal(club_id,trainer_id,client_id,start,status) VALUES(?,?,?,?,'planned')", club, trainer, client, start.toISOString()).lastInsertRowid;
   const tn = one('SELECT name FROM users WHERE id=?', trainer).name;
   notify(client, `Персональная тренировка: ${tn}, ${fmt(start.toISOString())}`);
-  if (!isTrainer) notify(trainer, `Новая запись: ${u.name}, ${fmt(start.toISOString())}`);
+  if (!isTrainer) notify(trainer, `Новая запись на персональную: ${u.name}, ${fmt(start.toISOString())}`, 'personal', id);
   return { id };
 }));
 R('POST', '/api/personal/:id/cancel', 'client', ({ u, params }) => tx(() => {
@@ -248,14 +259,56 @@ R('GET', '/api/notifications', 'any', ({ u }) => { const r = q('SELECT * FROM no
 // --- trainer app ---
 R('GET', '/api/trainer/day', 'trainer', ({ u, query }) => {
   const from = new Date(query.date || Date.now()); from.setUTCHours(0, 0, 0, 0); const to = new Date(from.getTime() + 864e5);
-  const classes = q('SELECT c.*,cl.name club FROM classes c JOIN clubs cl ON cl.id=c.club_id WHERE trainer_id=? AND start>=? AND start<?', u.id, from.toISOString(), to.toISOString()).map(c => ({ ...classView(c), type: 'class' }));
-  const pers = q("SELECT p.*,u.name client,cl.name club FROM personal p JOIN users u ON u.id=p.client_id JOIN clubs cl ON cl.id=p.club_id WHERE trainer_id=? AND start>=? AND start<? AND status<>'cancelled'", u.id, from.toISOString(), to.toISOString()).map(p => ({ ...p, type: 'personal' }));
-  return [...classes, ...pers].sort((a, b) => a.start.localeCompare(b.start));
+  const club = +query.club || 0, term = String(query.q || '').toLowerCase();
+  const unpaid = c => q("SELECT user_id FROM bookings WHERE class_id=? AND status='booked' AND user_id IS NOT NULL", c.id).some(b => !activeMembership(b.user_id, c.club_id) && !packOf(b.user_id, c.club_id));
+  const classes = q('SELECT c.*,cl.name club FROM classes c JOIN clubs cl ON cl.id=c.club_id WHERE trainer_id=? AND start>=? AND start<? AND (?=0 OR club_id=?)', u.id, from.toISOString(), to.toISOString(), club, club)
+    .map(c => ({ ...classView(c), type: 'class', unpaid: unpaid(c),
+      people: q("SELECT u.name FROM bookings b JOIN users u ON u.id=b.user_id WHERE class_id=? AND b.status<>'cancelled'", c.id).map(x => x.name) }));
+  const pers = q("SELECT p.*,u.name client,cl.name club FROM personal p JOIN users u ON u.id=p.client_id JOIN clubs cl ON cl.id=p.club_id WHERE trainer_id=? AND start>=? AND start<? AND status<>'cancelled' AND (?=0 OR p.club_id=?)", u.id, from.toISOString(), to.toISOString(), club, club)
+    .map(p => ({ ...p, type: 'personal', minutes: 60, unpaid: !packOf(p.client_id, p.club_id) && p.status === 'planned' }));
+  return [...classes, ...pers].filter(i => !term || [i.name, i.client, ...(i.people || [])].some(x => x && x.toLowerCase().includes(term))).sort((a, b) => a.start.localeCompare(b.start));
+});
+R('GET', '/api/trainer/month', 'trainer', ({ u, query }) => {
+  // Days of the month that have at least one class or personal session (for calendar dots).
+  const y = +query.y, m = +query.m, from = new Date(Date.UTC(y, m, 1)).toISOString(), to = new Date(Date.UTC(y, m + 1, 1)).toISOString();
+  const rows = [...q('SELECT start FROM classes WHERE trainer_id=? AND start>=? AND start<?', u.id, from, to), ...q("SELECT start FROM personal WHERE trainer_id=? AND status<>'cancelled' AND start>=? AND start<?", u.id, from, to)];
+  return [...new Set(rows.map(r => new Date(r.start).toLocaleDateString('sv-SE', MSK)))];
+});
+R('GET', '/api/trainer/home', 'trainer', ({ u }) => {
+  const from = new Date(); const to = new Date(from.getTime() + 864e5 * 7);
+  const next = [...q('SELECT id,name,start,minutes,room FROM classes WHERE trainer_id=? AND start>=? AND start<? ORDER BY start LIMIT 3', u.id, from.toISOString(), to.toISOString()).map(c => ({ ...c, type: 'class' })),
+    ...q("SELECT p.id,u.name,p.start FROM personal p JOIN users u ON u.id=p.client_id WHERE trainer_id=? AND status='planned' AND start>=? ORDER BY start LIMIT 3", u.id, from.toISOString()).map(p => ({ ...p, minutes: 60, type: 'personal' }))]
+    .sort((a, b) => a.start.localeCompare(b.start)).slice(0, 3);
+  const d0 = new Date(); d0.setUTCHours(0, 0, 0, 0); const d1 = new Date(d0.getTime() + 864e5);
+  const today = one('SELECT COUNT(*) n FROM classes WHERE trainer_id=? AND start>=? AND start<?', u.id, d0.toISOString(), d1.toISOString()).n
+    + one("SELECT COUNT(*) n FROM personal WHERE trainer_id=? AND status<>'cancelled' AND start>=? AND start<?", u.id, d0.toISOString(), d1.toISOString()).n;
+  return { next, today, notifications: q('SELECT * FROM notifications WHERE user_id=? ORDER BY id DESC LIMIT 3', u.id) };
+});
+R('GET', '/api/trainer/hours', 'trainer', ({ u }) => q('SELECT weekday,start,end FROM work_hours WHERE trainer_id=? ORDER BY weekday', u.id));
+R('PUT', '/api/trainer/hours', 'trainer', ({ u }, b) => tx(() => {
+  run('DELETE FROM work_hours WHERE trainer_id=?', u.id);
+  for (const h of (Array.isArray(b.hours) ? b.hours : [])) {
+    if (!(h.weekday >= 0 && h.weekday <= 6) || !/^\d\d:\d\d$/.test(h.start) || !/^\d\d:\d\d$/.test(h.end) || h.start >= h.end) throw new E(400, 'Неверное время работы');
+    run('INSERT INTO work_hours VALUES(?,?,?,?)', u.id, h.weekday, h.start, h.end);
+  }
+  return { ok: true };
+}));
+R('GET', '/api/trainer/achievements', 'trainer', ({ u }) => {
+  const pt = one("SELECT COUNT(*) n FROM personal WHERE trainer_id=? AND status='done'", u.id).n;
+  const visits = one("SELECT COUNT(*) n FROM bookings b JOIN classes c ON c.id=b.class_id WHERE c.trainer_id=? AND b.status='attended'", u.id).n;
+  const clients = one("SELECT COUNT(DISTINCT client_id) n FROM personal WHERE trainer_id=? AND status='done'", u.id).n;
+  return [['Первая персональная', pt, 1], ['10 персональных', pt, 10], ['100 персональных', pt, 100], ['50 гостей на группах', visits, 50], ['500 гостей на группах', visits, 500], ['5 постоянных клиентов', clients, 5]]
+    .map(([title, have, need]) => ({ title, have: Math.min(have, need), need, done: have >= need }));
+});
+R('POST', '/api/trainer/favorites/:id', 'trainer', ({ u, params }) => {
+  if (one('SELECT 1 x FROM favorites WHERE trainer_id=? AND client_id=?', u.id, +params.id)) { run('DELETE FROM favorites WHERE trainer_id=? AND client_id=?', u.id, +params.id); return { fav: false }; }
+  run('INSERT INTO favorites VALUES(?,?)', u.id, +params.id); return { fav: true };
 });
 const myClass = (u, id) => { const c = one('SELECT * FROM classes WHERE id=? AND trainer_id=?', +id, u.id); if (!c) throw new E(404, 'Занятие не найдено'); return c; };
 R('GET', '/api/trainer/classes/:id', 'trainer', ({ u, params }) => {
   const c = myClass(u, params.id);
-  return { ...classView(c), people: q("SELECT b.id,b.status,b.guest,u.name,u.id user_id FROM bookings b LEFT JOIN users u ON u.id=b.user_id WHERE class_id=? AND b.status<>'cancelled' ORDER BY b.status='waitlist', b.id", c.id) };
+  return { ...classView(c), people: q("SELECT b.id,b.status,b.guest,u.name,u.id user_id FROM bookings b LEFT JOIN users u ON u.id=b.user_id WHERE class_id=? AND b.status<>'cancelled' ORDER BY b.status='waitlist', b.id", c.id)
+    .map(p => ({ ...p, paid: !p.user_id || !!(activeMembership(p.user_id, c.club_id) || packOf(p.user_id, c.club_id)) })) };
 });
 R('POST', '/api/trainer/bookings/:id/mark', 'trainer', ({ u, params }, b) => tx(() => {
   const bk = one('SELECT * FROM bookings WHERE id=?', +params.id); if (!bk) throw new E(404, 'Нет записи'); const c = myClass(u, bk.class_id);
@@ -298,14 +351,19 @@ R('POST', '/api/trainer/personal/:id/move', 'trainer', ({ u, params }, b) => tx(
   run('UPDATE personal SET start=? WHERE id=?', s.toISOString(), p.id); notify(p.client_id, `Тренировка перенесена на ${fmt(s.toISOString())}`); return { ok: true };
 }));
 R('GET', '/api/trainer/clients', 'trainer', ({ u, query }) => {
-  const like = '%' + String(query.q || '') + '%';
-  return q(`SELECT DISTINCT u.id,u.name,u.phone FROM users u WHERE u.role='client' AND u.club_id IN (SELECT club_id FROM trainer_clubs WHERE trainer_id=?) AND (u.name LIKE ? OR u.phone LIKE ?) ORDER BY u.name LIMIT 100`, u.id, like, like)
-    .map(c => ({ ...c, left: one("SELECT COALESCE(SUM(sessions_left),0) n FROM memberships m JOIN products p ON p.id=m.product_id WHERE m.user_id=? AND p.kind='pack' AND m.until>?", c.id, now()).n,
+  const term = String(query.q || '').trim(), fav = query.fav === '1';
+  // Like the original, the full club base is not listed: search needs 3+ characters; favourites and own clients are shown without it.
+  const card = /^\d{1,6}$/.test(term) ? +term : -1, like = '%' + term + '%';
+  const rows = term.length >= 3 || card > 0
+    ? q(`SELECT DISTINCT u.id,u.name,u.phone FROM users u WHERE u.role='client' AND u.club_id IN (SELECT club_id FROM trainer_clubs WHERE trainer_id=?) AND (u.name LIKE ? OR u.phone LIKE ? OR u.id=?) ORDER BY u.name LIMIT 100`, u.id, like, like, card)
+    : q(`SELECT DISTINCT u.id,u.name,u.phone FROM users u WHERE u.id IN (SELECT client_id FROM favorites WHERE trainer_id=?) ${fav ? '' : 'OR u.id IN (SELECT client_id FROM personal WHERE trainer_id=?)'} ORDER BY u.name`, ...(fav ? [u.id] : [u.id, u.id]));
+  return rows.filter(c => !fav || one('SELECT 1 x FROM favorites WHERE trainer_id=? AND client_id=?', u.id, c.id))
+    .map(c => ({ ...c, fav: !!one('SELECT 1 x FROM favorites WHERE trainer_id=? AND client_id=?', u.id, c.id), left: one("SELECT COALESCE(SUM(sessions_left),0) n FROM memberships m JOIN products p ON p.id=m.product_id WHERE m.user_id=? AND p.kind='pack' AND m.until>?", c.id, now()).n,
       note: one('SELECT text FROM notes WHERE trainer_id=? AND client_id=?', u.id, c.id)?.text || '' }));
 });
 R('GET', '/api/trainer/clients/:id', 'trainer', ({ u, params }) => {
   const c = one("SELECT id,name,phone,club_id FROM users WHERE id=? AND role='client'", +params.id); if (!c) throw new E(404, 'Клиент не найден');
-  return { ...c, left: packOf(c.id, c.club_id)?.sessions_left || 0, note: one('SELECT text FROM notes WHERE trainer_id=? AND client_id=?', u.id, c.id)?.text || '',
+  return { ...c, fav: !!one('SELECT 1 x FROM favorites WHERE trainer_id=? AND client_id=?', u.id, c.id), card: String(c.id).padStart(6, '0'), left: packOf(c.id, c.club_id)?.sessions_left || 0, note: one('SELECT text FROM notes WHERE trainer_id=? AND client_id=?', u.id, c.id)?.text || '',
     history: q('SELECT * FROM personal WHERE trainer_id=? AND client_id=? ORDER BY start DESC LIMIT 30', u.id, c.id) };
 });
 R('PUT', '/api/trainer/clients/:id/note', 'trainer', ({ u, params }, b) => { run('INSERT INTO notes VALUES(?,?,?) ON CONFLICT DO UPDATE SET text=excluded.text', u.id, +params.id, String(b.text || '').slice(0, 2000)); return { ok: true }; });
