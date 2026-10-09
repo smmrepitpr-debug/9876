@@ -11,7 +11,7 @@ const db = new DatabaseSync(process.env.DB_PATH || path.join(__dirname, 'fitclub
 db.exec('PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL;');
 
 db.exec(`
-CREATE TABLE IF NOT EXISTS clubs(id INTEGER PRIMARY KEY, name TEXT NOT NULL, city TEXT NOT NULL, address TEXT);
+CREATE TABLE IF NOT EXISTS clubs(id INTEGER PRIMARY KEY, name TEXT NOT NULL, city TEXT NOT NULL, address TEXT, phone TEXT);
 CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY, phone TEXT UNIQUE NOT NULL, name TEXT NOT NULL,
   role TEXT NOT NULL CHECK(role IN('client','trainer','admin')), pass TEXT NOT NULL, balance INTEGER NOT NULL DEFAULT 0,
   spec TEXT, price INTEGER, club_id INTEGER REFERENCES clubs(id));
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS personal(id INTEGER PRIMARY KEY, club_id INTEGER NOT 
   client_id INTEGER NOT NULL REFERENCES users(id), start TEXT NOT NULL,
   status TEXT NOT NULL CHECK(status IN('planned','done','missed','cancelled')));
 CREATE TABLE IF NOT EXISTS products(id INTEGER PRIMARY KEY, club_id INTEGER NOT NULL REFERENCES clubs(id), name TEXT NOT NULL,
-  kind TEXT NOT NULL CHECK(kind IN('membership','pack','single')), price INTEGER NOT NULL, days INTEGER, sessions INTEGER, freeze_days INTEGER DEFAULT 0);
+  kind TEXT NOT NULL CHECK(kind IN('membership','pack','single')), category TEXT DEFAULT 'Абонементы', price INTEGER NOT NULL, days INTEGER, sessions INTEGER, freeze_days INTEGER DEFAULT 0);
 CREATE TABLE IF NOT EXISTS memberships(id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), product_id INTEGER NOT NULL REFERENCES products(id),
   club_id INTEGER NOT NULL, until TEXT, sessions_left INTEGER, freeze_left INTEGER DEFAULT 0, frozen_until TEXT, created TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS transactions(id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), amount INTEGER NOT NULL, title TEXT NOT NULL, created TEXT NOT NULL);
@@ -37,8 +37,11 @@ CREATE TABLE IF NOT EXISTS news(id INTEGER PRIMARY KEY, club_id INTEGER NOT NULL
 CREATE TABLE IF NOT EXISTS notifications(id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), text TEXT NOT NULL, read INTEGER DEFAULT 0, created TEXT NOT NULL, link_type TEXT, link_id INTEGER);
 CREATE TABLE IF NOT EXISTS favorites(trainer_id INTEGER NOT NULL, client_id INTEGER NOT NULL, PRIMARY KEY(trainer_id,client_id));
 CREATE TABLE IF NOT EXISTS work_hours(trainer_id INTEGER NOT NULL, weekday INTEGER NOT NULL, start TEXT, end TEXT, PRIMARY KEY(trainer_id,weekday));
+CREATE TABLE IF NOT EXISTS feedback(id INTEGER PRIMARY KEY, user_id INTEGER, club_id INTEGER, kind TEXT NOT NULL, name TEXT, phone TEXT, text TEXT NOT NULL, created TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS notes(trainer_id INTEGER NOT NULL, client_id INTEGER NOT NULL, text TEXT NOT NULL, PRIMARY KEY(trainer_id,client_id));
 `);
+
+for (const m of ['ALTER TABLE clubs ADD COLUMN phone TEXT', "ALTER TABLE products ADD COLUMN category TEXT DEFAULT 'Абонементы'"]) { try { db.exec(m); } catch (e) { /* column exists */ } }
 
 // ---------- helpers ----------
 const now = () => new Date().toISOString();
@@ -58,7 +61,7 @@ const fmt = iso => new Date(iso).toLocaleString('ru-RU', { day: '2-digit', month
 
 // ---------- seed ----------
 if (!one('SELECT 1 x FROM clubs')) tx(() => {
-  run("INSERT INTO clubs(name,city,address) VALUES('FitClub Центр','Москва','ул. Примерная, 1'),('FitClub Север','Москва','пр. Тестовый, 15'),('FitClub Нева','Санкт-Петербург','наб. Демо, 7')");
+  run("INSERT INTO clubs(name,city,address,phone) VALUES('FitClub Центр','Москва','ул. Примерная, 1','+74950000001'),('FitClub Север','Москва','пр. Тестовый, 15','+74950000002'),('FitClub Нева','Санкт-Петербург','наб. Демо, 7','+78120000003')");
   const u = (phone, name, role, extra = {}) => run('INSERT INTO users(phone,name,role,pass,balance,spec,price,club_id) VALUES(?,?,?,?,?,?,?,?)',
     phone, name, role, hash('1234'), extra.balance || 0, extra.spec || null, extra.price || null, extra.club || 1).lastInsertRowid;
   const t1 = u('79990000001', 'Игорь Волков', 'trainer', { spec: 'Силовой, функциональный', price: 3000 });
@@ -77,10 +80,21 @@ if (!one('SELECT 1 x FROM clubs')) tx(() => {
     others.slice(0, n % 5).forEach(o => run("INSERT INTO bookings(class_id,user_id,status,created) VALUES(?,?,?,?)", cid, o, d < 0 ? 'attended' : 'booked', now()));
   }
   for (const club of [1, 2, 3]) {
-    run("INSERT INTO products(club_id,name,kind,price,days,sessions,freeze_days) VALUES(?,?,?,?,?,?,?)", club, 'Безлимит 1 месяц', 'membership', 6500, 30, null, 7);
-    run("INSERT INTO products(club_id,name,kind,price,days,sessions,freeze_days) VALUES(?,?,?,?,?,?,?)", club, 'Безлимит 12 месяцев', 'membership', 45000, 365, null, 60);
-    run("INSERT INTO products(club_id,name,kind,price,days,sessions,freeze_days) VALUES(?,?,?,?,?,?,?)", club, 'Пакет 10 персональных', 'pack', 25000, 90, 10, 0);
-    run("INSERT INTO products(club_id,name,kind,price,days,sessions,freeze_days) VALUES(?,?,?,?,?,?,?)", club, 'Разовое посещение', 'single', 1200, 1, 1, 0);
+    // Catalogue grouped like the original shop: unlimited, kids, limited, online, personal, single visit.
+    const P = (cat, name, kind, price, days, sessions, freeze) => run('INSERT INTO products(club_id,category,name,kind,price,days,sessions,freeze_days) VALUES(?,?,?,?,?,?,?,?)', club, cat, name, kind, price, days, sessions, freeze);
+    P('Безлимитные абонементы', 'Безлимит 1 месяц', 'membership', 6500, 30, null, 7);
+    P('Безлимитные абонементы', 'Безлимит 12 месяцев', 'membership', 45000, 365, null, 60);
+    P('Персональные тренировки', 'Пакет 10 персональных', 'pack', 25000, 90, 10, 0);
+    P('Разовое занятие', 'Разовое посещение', 'single', 1200, 1, 1, 0);
+    P('Безлимитные абонементы', 'Безлимит 3 месяца', 'membership', 18500, 90, null, 14);
+    P('Детские абонементы до 14 лет', 'Детский: 4 занятия в месяц', 'membership', 1500, 30, 4, 0);
+    P('Детские абонементы до 14 лет', 'Детский: 8 занятий в месяц', 'membership', 2600, 30, 8, 0);
+    P('Лимитные абонементы', '4 занятия в месяц', 'membership', 1800, 30, 4, 0);
+    P('Лимитные абонементы', '12 занятий в месяц', 'membership', 3900, 30, 12, 0);
+    P('Онлайн-клуб', 'Онлайн-курс «Здоровая спина»', 'membership', 2900, 30, null, 0);
+    P('Персональные тренировки', 'Пакет 4 персональных', 'pack', 4400, 30, 4, 0);
+    P('Персональные тренировки', 'Разовая персональная', 'pack', 1500, 30, 1, 0);
+    P('Персональные тренировки', 'Сплит-тренировка (на двоих)', 'pack', 2000, 30, 1, 0);
     run('INSERT INTO news(club_id,title,body,created) VALUES(?,?,?,?)', club, 'Приведи друга — неделя в подарок', 'Обоим участникам продлеваем абонемент на 7 дней.', now());
   }
   run('INSERT INTO news(club_id,title,body,created) VALUES(1,?,?,?)', 'Бассейн закрыт на санобработку', 'В субботу с 08:00 до 14:00.', now());
@@ -220,7 +234,32 @@ R('POST', '/api/personal/:id/cancel', 'client', ({ u, params }) => tx(() => {
   const p = one("SELECT * FROM personal WHERE id=? AND client_id=? AND status='planned'", +params.id, u.id); if (!p) throw new E(404, 'Не найдено');
   run("UPDATE personal SET status='cancelled' WHERE id=?", p.id); notify(p.trainer_id, `${u.name} отменил(а) тренировку ${fmt(p.start)}`); return { ok: true };
 }));
-R('GET', '/api/products', 'client', ({ u }) => q('SELECT * FROM products WHERE club_id=? ORDER BY price', u.club_id));
+R('GET', '/api/products', 'client', ({ u, query }) => q("SELECT * FROM products WHERE club_id=? AND name LIKE ? ORDER BY category, price", u.club_id, '%' + String(query.q || '') + '%'));
+R('GET', '/api/my-trainings', 'client', ({ u }) => [
+  ...q("SELECT c.id,c.name,c.start,c.minutes,c.room,t.name trainer,b.status FROM bookings b JOIN classes c ON c.id=b.class_id LEFT JOIN users t ON t.id=c.trainer_id WHERE b.user_id=? AND b.status<>'cancelled' ORDER BY c.start DESC LIMIT 60", u.id).map(x => ({ ...x, type: 'class' })),
+  ...q("SELECT p.id,'Персональная тренировка' name,p.start,60 minutes,t.name trainer,p.status FROM personal p JOIN users t ON t.id=p.trainer_id WHERE p.client_id=? AND p.status<>'cancelled' ORDER BY p.start DESC LIMIT 60", u.id).map(x => ({ ...x, type: 'personal' })),
+].sort((a, b) => b.start.localeCompare(a.start)));
+R('GET', '/api/achievements', 'client', ({ u }) => {
+  const visits = one('SELECT COUNT(*) n FROM visits WHERE user_id=?', u.id).n;
+  const groups = one("SELECT COUNT(*) n FROM bookings WHERE user_id=? AND status='attended'", u.id).n;
+  const pt = one("SELECT COUNT(*) n FROM personal WHERE client_id=? AND status='done'", u.id).n;
+  return [['Первый визит', visits, 1], ['10 визитов', visits, 10], ['50 визитов', visits, 50], ['Первое групповое', groups, 1], ['20 групповых', groups, 20], ['Первая персональная', pt, 1], ['10 персональных', pt, 10]]
+    .map(([title, have, need]) => ({ title, have: Math.min(have, need), need, done: have >= need }));
+});
+R('POST', '/api/feedback', 'client', ({ u }, b) => {
+  const text = String(b.text || '').trim(); if (text.length < 3) throw new E(400, 'Напишите сообщение');
+  run('INSERT INTO feedback(user_id,club_id,kind,name,phone,text,created) VALUES(?,?,?,?,?,?,?)', u.id, u.club_id, 'feedback', u.name, u.phone, text.slice(0, 3000), now());
+  for (const a of q("SELECT id FROM users WHERE role='admin'")) notify(a.id, `Обратная связь от ${u.name}: ${text.slice(0, 200)}`);
+  return { ok: true };
+});
+R('POST', '/api/join', null, (_, b) => {
+  // "Стать членом клуба": a lead for the club's sales desk; works without an account.
+  const phone = normPhone(b.phone), name = String(b.name || '').trim(), club = +b.club_id;
+  if (phone.length !== 11 || name.length < 2 || !one('SELECT 1 x FROM clubs WHERE id=?', club)) throw new E(400, 'Укажите имя, телефон и клуб');
+  run('INSERT INTO feedback(club_id,kind,name,phone,text,created) VALUES(?,?,?,?,?,?)', club, 'lead', name.slice(0, 80), phone, String(b.text || 'Хочу стать членом клуба').slice(0, 1000), now());
+  for (const a of q("SELECT id FROM users WHERE role='admin'")) notify(a.id, `Заявка на членство: ${name}, +${phone}`);
+  return { ok: true };
+});
 R('POST', '/api/products/:id/buy', 'client', ({ u, params }) => tx(() => {
   const p = one('SELECT * FROM products WHERE id=? AND club_id=?', +params.id, u.club_id); if (!p) throw new E(404, 'Нет такого товара');
   const bal = one('SELECT balance FROM users WHERE id=?', u.id).balance; if (bal < p.price) throw new E(402, 'Недостаточно средств, пополните счёт');
@@ -317,8 +356,8 @@ R('POST', '/api/trainer/bookings/:id/mark', 'trainer', ({ u, params }, b) => tx(
   const was = bk.status; run('UPDATE bookings SET status=? WHERE id=?', b.status, bk.id);
   if (bk.user_id && b.status === 'attended' && was !== 'attended') {
     run('INSERT INTO visits(user_id,club_id,at) VALUES(?,?,?)', bk.user_id, c.club_id, c.start);
-    const single = one("SELECT m.id FROM memberships m JOIN products p ON p.id=m.product_id WHERE m.user_id=? AND m.club_id=? AND p.kind='single' AND m.sessions_left>0", bk.user_id, c.club_id);
-    const unlimited = one("SELECT 1 x FROM memberships m JOIN products p ON p.id=m.product_id WHERE m.user_id=? AND m.club_id=? AND p.kind='membership' AND m.until>?", bk.user_id, c.club_id, now());
+    const single = one("SELECT m.id FROM memberships m JOIN products p ON p.id=m.product_id WHERE m.user_id=? AND m.club_id=? AND p.kind IN('membership','single') AND m.sessions_left>0 AND m.until>? ORDER BY m.until", bk.user_id, c.club_id, now());
+    const unlimited = one("SELECT 1 x FROM memberships m JOIN products p ON p.id=m.product_id WHERE m.user_id=? AND m.club_id=? AND p.kind='membership' AND m.sessions_left IS NULL AND m.until>?", bk.user_id, c.club_id, now());
     if (single && !unlimited) run('UPDATE memberships SET sessions_left=sessions_left-1 WHERE id=?', single.id);
   }
   return { ok: true };

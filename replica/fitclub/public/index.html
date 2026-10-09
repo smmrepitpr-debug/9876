@@ -8,6 +8,14 @@
 <title>FitClub</title>
 <style>
 :root{--bg:#f2f3f7;--card:#fff;--text:#1b1d22;--muted:#6b7280;--line:#e5e7eb;--accent:#4f46e5;--ok:#16a34a;--warn:#d97706;--bad:#dc2626;--chip:#eceef3;--grad:linear-gradient(135deg,#4f46e5,#7c3aed)}
+body:not(.trainer){--accent:#1b3f8f;--grad:linear-gradient(135deg,#1b3f8f,#2c5fc7);--orange:#e58a3c}
+.appbar{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:16px;background:#14347d;color:#fff;padding:14px 16px}.appbar b{font-size:19px;font-weight:500}.appbar button{border:0;background:none;color:#fff;font-size:22px;cursor:pointer;display:flex}
+.drawer{position:fixed;top:0;bottom:0;left:max(0px,calc(50% - 240px));width:min(300px,82vw);background:var(--card);z-index:7;display:flex;flex-direction:column;box-shadow:4px 0 16px #0003}
+.dhead{background:var(--orange);color:#fff;padding:22px 16px;font-weight:600}.drawer nav{flex:1;overflow:auto}.drawer nav button{display:block;width:100%;text-align:left;border:0;background:none;padding:13px 16px;font-size:15px;color:var(--text);cursor:pointer}.drawer nav button.on{background:var(--chip);font-weight:600}.drawer .dot{position:static}
+.dexit{display:flex;gap:10px;align-items:center;border:0;border-top:1px solid var(--line);background:none;padding:14px 16px;text-align:left;color:var(--text);cursor:pointer}.dexit svg{color:var(--orange);flex:none}
+.acc{background:var(--card);border-radius:12px;overflow:hidden}.acch{display:flex;justify-content:space-between;align-items:center;width:100%;border:0;background:var(--chip);padding:14px 12px;font-size:15px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--line)}
+.acci{display:block;width:100%;text-align:left;border:0;background:var(--card);padding:12px 12px 12px 26px;border-bottom:1px solid var(--line);font-size:15px;color:var(--text);cursor:pointer}.acci span{display:block}.acci .mut{margin-top:2px}
+.dot{background:var(--bad);color:#fff;font-size:10px;font-style:normal;border-radius:9px;padding:1px 5px}
 body.trainer .bar button{font-size:26px;margin-right:16px}body.trainer .bar{background:var(--bg);border:0}
 body.trainer{--accent:#1590d4;--grad:linear-gradient(135deg,#1590d4,#3b6fd8);--bg:#eef2f6}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body.trainer{--bg:#0f1115}}
@@ -96,13 +104,16 @@ async function loginScreen() {
 }
 
 // ---------------- client ----------------
-const C_TABS = [['home', '🏠', 'Главная'], ['sched', '📅', 'Расписание'], ['pt', '💪', 'Тренеры'], ['card', '🔳', 'Карта'], ['prof', '👤', 'Профиль']];
+// Client navigation is a side drawer, as in the original (club name on top, sections below, exit at the bottom).
+const C_MENU = [['sched', 'Расписание'], ['home', 'Личный кабинет'], ['shop', 'Магазин'], ['clubs', 'Клубы'], ['pt', 'Тренеры'], ['news', 'Новости'], ['call', 'Позвонить в клуб'], ['join', 'Стать членом клуба'],
+  ['ach', 'Мои достижения'], ['trainings', 'Мои тренировки'], ['ptrain', 'Персональный тренинг'], ['notif', 'Уведомления'], ['feedback', 'Обратная связь'], ['about', 'О приложении']];
+const C_TABS = [];
 const C = {
   async home() {
     const h = await api('/home'), me = st.me;
-    return ['FitClub', `<div class="hero"><div style="opacity:.8">${esc(me.club?.name)}</div><b style="font-size:20px">${esc(me.name)}</b>
+    return ['Личный кабинет', `<div class="hero"><div style="opacity:.8">${esc(me.club?.name)}</div><b style="font-size:20px">${esc(me.name)}</b>
     <div class="row" style="margin-top:12px"><div class="stat"><b>${rub(h.balance)}</b>на счёте</div><div class="stat"><b>${h.memberships.filter(m => m.kind === 'pack').reduce((a, m) => a + (m.sessions_left || 0), 0)}</b>персональных</div><div class="stat"><b>${h.visits}</b>визитов</div></div></div>
-    <div class="row" style="gap:8px"><button class="btn ghost grow" data-push="shop">💳 Магазин</button><button class="btn ghost grow" data-push="news">📰 Новости</button><button class="btn ghost" data-push="notif">🔔${me.unread ? ' ' + me.unread : ''}</button></div>
+    <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn ghost grow" data-go="shop">Магазин</button><button class="btn ghost grow" data-push="card">Клубная карта</button><button class="btn ghost grow" data-push="prof">Счёт и профиль</button></div>
     <div class="sec">Мои записи</div>${h.upcoming.map(u => `<div class="card row"><div class="grow"><b>${esc(u.name)}</b><div class="mut">${dt(u.start)} ${tm(u.start)} · ${esc(u.trainer || '')}${u.room ? ' · ' + esc(u.room) : ''}</div></div>
       ${u.type === 'class' ? (u.my === 'waitlist' ? '<span class="tag warn">ожидание</span>' : '<span class="tag ok">записан</span>') + `<button class="btn sm ghost" data-act="cancelClass" data-id="${u.id}">✕</button>` : `<button class="btn sm ghost" data-act="cancelPt" data-id="${u.id}">✕</button>`}</div>`).join('') || '<div class="empty">Записей нет — откройте расписание</div>'}
     <div class="sec">Абонементы и услуги</div>${h.memberships.map(m => { const frozen = m.frozen_until && new Date(m.frozen_until) > new Date(); const expired = new Date(m.until) < new Date();
@@ -144,9 +155,49 @@ const C = {
     <button class="btn ghost full" data-act="logout">Выйти</button><button class="btn ghost full" style="margin-top:8px;color:var(--bad)" data-act="delete">Удалить аккаунт</button>`];
   },
   async shop() {
-    const ps = await api('/products');
-    return ['Магазин', `<div class="card row"><span class="grow">На счёте</span><b>${rub(st.me.balance)}</b></div>` + ps.map(p => `<div class="card row"><div class="grow"><b>${esc(p.name)}</b><div class="mut">${p.sessions ? p.sessions + ' занятий · ' : ''}${p.days} дн.${p.freeze_days ? ' · заморозка ' + p.freeze_days + ' дн.' : ''}</div></div><button class="btn sm" data-act="buy" data-id="${p.id}">${rub(p.price)}</button></div>`).join('')];
+    const ps = await api('/products?q=' + encodeURIComponent(st.shopq || '')); const cats = [...new Set(ps.map(p => p.category))]; st.closed ||= {};
+    return ['Магазин', (st.shopSearch ? `<div class="search">${ic.search}<input id="shopq" placeholder="Поиск услуги" value="${esc(st.shopq || '')}"></div>` : '') +
+      `<div class="row mut" style="margin:0 0 8px">На счёте: <b style="color:var(--text)">${rub(st.me.balance)}</b></div><div class="acc">` +
+      cats.map(c => { const open = !st.closed[c]; return `<button class="acch" data-act="acc" data-c="${esc(c)}">${esc(c)}<span class="chev" style="transform:rotate(${open ? 180 : 0}deg)">${ic.chev}</span></button>` +
+        (open ? ps.filter(p => p.category === c).map(p => `<button class="acci" data-push="product" data-arg="${p.id}"><span>${esc(p.name)}</span><span class="mut">${p.price.toLocaleString('ru', { minimumFractionDigits: 2 })} ₽</span></button>`).join('') : ''); }).join('') +
+      '</div>' + (ps.length ? '' : '<div class="empty">Ничего не найдено</div>')];
   },
+  async product(id) {
+    const p = (await api('/products')).find(x => x.id == id);
+    return [p.category, `<div class="card"><h3>${esc(p.name)}</h3><div class="mut">${p.sessions ? p.sessions + (p.kind === 'pack' ? ' персональных' : ' занятий') + ' · ' : 'Без ограничения посещений · '}действует ${p.days} дн.${p.freeze_days ? ' · заморозка до ' + p.freeze_days + ' дн.' : ''}</div>
+      <div style="font-size:26px;font-weight:700;margin:12px 0">${rub(p.price)}</div><div class="mut">На счёте ${rub(st.me.balance)}</div></div><button class="btn full" data-act="buy" data-id="${p.id}">Купить</button>`];
+  },
+  async clubs() {
+    const cs = await api('/clubs');
+    return ['Клубы', cs.map(c => `<div class="card row"><div class="grow"><b>${esc(c.name)}</b><div class="mut">${esc(c.city)}, ${esc(c.address)}</div>${c.phone ? `<a class="mut" href="tel:${c.phone}">${c.phone}</a>` : ''}</div>${c.id === st.me.club_id ? '<span class="tag ok">мой клуб</span>' : `<button class="btn sm ghost" data-act="chooseClub" data-id="${c.id}">Выбрать</button>`}</div>`).join('')];
+  },
+  async call() {
+    const c = st.me.club;
+    return ['Позвонить в клуб', `<div class="card"><b>${esc(c.name)}</b><div class="mut">${esc(c.address)}</div><a class="btn full" style="display:block;text-align:center;margin-top:12px;text-decoration:none" href="tel:${c.phone}">Позвонить ${esc(c.phone || '')}</a></div>`];
+  },
+  async join() {
+    const cs = await api('/clubs');
+    return ['Стать членом клуба', `<div class="card"><p class="mut" style="margin-top:0">Оставьте контакты — менеджер клуба перезвонит и подберёт абонемент.</p><label>Имя</label><input id="jn" value="${esc(st.me.name)}"><label>Телефон</label><input id="jp" value="+${st.me.phone}">
+      <label>Клуб</label><select id="jc">${cs.map(c => `<option value="${c.id}" ${c.id === st.me.club_id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select><label>Комментарий</label><textarea id="jt" rows="2"></textarea><button class="btn full" data-act="join">Отправить заявку</button></div>`];
+  },
+  async ach() {
+    const a = await api('/achievements');
+    return ['Мои достижения', a.map(x => `<div class="card"><div class="row"><span style="font-size:22px">${x.done ? '🏆' : '🔒'}</span><b class="grow">${esc(x.title)}</b><span class="mut">${x.have}/${x.need}</span></div><div class="bar2" style="margin-top:8px"><i style="width:${x.have / x.need * 100}%"></i></div></div>`).join('')];
+  },
+  async trainings() {
+    const t = await api('/my-trainings'), lbl = { booked: ['записан', 'ok'], waitlist: ['ожидание', 'warn'], attended: ['посетил', 'ok'], missed: ['пропуск', 'bad'], planned: ['запланирована', 'ok'], done: ['проведена', 'ok'] };
+    return ['Мои тренировки', t.map(x => `<div class="card row"><div class="grow"><b>${esc(x.name)}</b><div class="mut">${dt(x.start)} ${tm(x.start)} · ${esc(x.trainer || '')}${x.room ? ' · ' + esc(x.room) : ''}</div></div><span class="tag ${lbl[x.status]?.[1] || ''}">${lbl[x.status]?.[0] || x.status}</span></div>`).join('') || '<div class="empty">Тренировок пока нет</div>'];
+  },
+  async ptrain() {
+    const h = await api('/home'), left = h.memberships.filter(m => m.kind === 'pack').reduce((a, m) => a + (m.sessions_left || 0), 0), pts = h.upcoming.filter(u => u.type === 'personal');
+    return ['Персональный тренинг', `<div class="card row"><span class="grow">Осталось персональных</span><b>${left}</b></div>${left ? '' : '<button class="btn full" data-go="shop" style="margin-bottom:10px">Купить пакет</button>'}
+      <div class="sec">Записи</div>${pts.map(u => `<div class="card row"><div class="grow"><b>${dt(u.start)} ${tm(u.start)}</b><div class="mut">${esc(u.trainer)}</div></div><button class="btn sm ghost" data-act="cancelPt" data-id="${u.id}">Отменить</button></div>`).join('') || '<div class="empty">Нет записей</div>'}
+      <button class="btn full" data-go="pt">Выбрать тренера и время</button>`];
+  },
+  async feedback() {
+    return ['Обратная связь', `<div class="card"><label>Сообщение для клуба</label><textarea id="fb" rows="5" placeholder="Вопрос, пожелание или жалоба"></textarea><button class="btn full" data-act="feedback">Отправить</button></div>`];
+  },
+  async about() { return ['О приложении', `<div class="card"><b>FitClub</b><div class="mut">Версия 1.0</div><p>Расписание, запись на занятия, абонементы и личный кабинет вашего клуба.</p></div>`]; },
   async news() { const n = await api('/news'); return ['Новости', n.map(x => `<div class="card"><h3>${esc(x.title)}</h3><div>${esc(x.body)}</div><div class="mut">${dt(x.created)}</div></div>`).join('') || '<div class="empty">Новостей нет</div>']; },
   notif: async () => notifScreen(),
 };
@@ -287,10 +338,19 @@ async function render() {
   try {
     st.me = await api('/me');
     const S = MODE === 'trainer' ? T : C, tabs = MODE === 'trainer' ? T_TABS : C_TABS;
-    st.tab ||= tabs[0][0];
+    st.tab ||= MODE === 'client' ? 'sched' : tabs[0][0];
     const top = st.stack[st.stack.length - 1];
     const [title, body] = top ? await S[top.screen](top.arg) : await S[st.tab]();
     const y = window.scrollY, same = app.dataset.view === (top ? top.screen + top.arg : st.tab);
+    if (MODE === 'client') {
+      const cur = top ? top.screen : st.tab;
+      app.innerHTML = `<div class="appbar">${top ? '<button data-back>←</button>' : '<button data-act="drawer" aria-label="Меню">☰</button>'}<b class="grow">${esc(title)}</b>${cur === 'shop' ? `<button data-act="shopSearch">${ic.search}</button>` : ''}</div><main>${body}</main>
+        ${st.drawer ? `<div class="sheet-bg" data-act="drawer"></div><aside class="drawer"><div class="dhead">${esc(st.me.club?.name || '')}</div><nav>${C_MENU.map(([k, l]) => `<button class="${k === st.tab ? 'on' : ''}" data-go="${k}">${l}${k === 'notif' && st.me.unread ? ` <i class="dot">${st.me.unread}</i>` : ''}</button>`).join('')}</nav>
+          <button class="dexit" data-act="logout"><span><b>Выйти</b><br><span class="mut">После выхода снова выберите клуб и войдите</span></span>${ic.logout}</button></aside>` : ''}`;
+      app.dataset.view = cur;
+      const sq = $('#shopq'); if (sq) sq.oninput = () => { st.shopq = sq.value; clearTimeout(sq._t); sq._t = setTimeout(async () => { await render(); const n = $('#shopq'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 300); };
+      return;
+    }
     app.innerHTML = `${title || top ? `<div class="bar">${top ? `<button data-back>${MODE === 'trainer' ? '←' : '‹ Назад'}</button>` : ''}<b>${esc(title)}</b></div>` : ''}<main>${body}</main>${st.cal ? await calendarSheet() : ''}
       <nav class="tabs">${tabs.map(t => `<button class="${t[0] === st.tab && !top ? 'on' : ''}" data-tab="${t[0]}"><span>${t[1]}</span>${t[2]}</button>`).join('')}</nav>`;
     app.dataset.view = top ? top.screen + top.arg : st.tab; if (same) window.scrollTo(0, y); else window.scrollTo(0, 0);
@@ -299,6 +359,7 @@ async function render() {
   } catch (e) { if (token) app.innerHTML = `<div class="login"><p>${esc(e.message)}</p><button class="btn" onclick="location.reload()">Повторить</button></div>`; }
 }
 document.addEventListener('click', e => {
+  const g = e.target.closest('[data-go]'); if (g) { st.tab = g.dataset.go; st.stack = []; st.drawer = false; return render(); }
   const t = e.target.closest('[data-tab],[data-back],[data-push],[data-day],[data-filter],[data-period],[data-act]'); if (!t) return; const d = t.dataset;
   if (d.tab) { st.tab = d.tab; st.stack = []; return render(); }
   if ('back' in d) { st.stack.pop(); return render(); }
@@ -318,7 +379,7 @@ document.addEventListener('click', e => {
     cancelPt: async () => { if (!confirm('Отменить тренировку?')) return 'noop'; await api(`/personal/${id}/cancel`, { body: {} }); toast('Тренировка отменена'); },
     bookPt: async () => { await api('/personal', { body: { trainer_id: d.t, start: d.s } }); toast('Вы записаны к тренеру'); st.stack = []; st.tab = 'home'; },
     freeze: async () => { const frozen = t.textContent === 'Разморозить'; let days = 7; if (!frozen) { days = prompt('На сколько дней заморозить?', '7'); if (!days) return 'noop'; } await api(`/memberships/${id}/freeze`, { body: { days: +days } }); toast(frozen ? 'Абонемент разморожен' : 'Абонемент заморожен'); },
-    buy: async () => { await api(`/products/${id}/buy`, { body: {} }); toast('Оплачено'); },
+    buy: async () => { await api(`/products/${id}/buy`, { body: {} }); toast('Оплачено'); if (st.stack.length) st.stack.pop(); },
     topup: async () => { await api('/topup', { body: { amount: +v('amt') } }); toast('Счёт пополнен'); },
     checkin: async () => { await api('/checkin', { body: {} }); toast('Добро пожаловать!'); },
     setClub: async () => { await api('/me', { method: 'PATCH', body: { club_id: +v('club') } }); toast('Клуб изменён'); },
@@ -330,6 +391,12 @@ document.addEventListener('click', e => {
     move: async () => { if (!v('mv')) throw new Error('Выберите время'); await api(`/trainer/personal/${id}/move`, { body: { start: new Date(v('mv')).toISOString() } }); toast('Перенесено'); },
     note: async () => { await api(`/trainer/clients/${id}/note`, { method: 'PUT', body: { text: v('note') } }); toast('Заметка сохранена'); },
     addPt: async () => { if (!v('when')) throw new Error('Выберите время'); await api('/personal', { body: { client_id: +id, club_id: +(v('pclub') || 0) || undefined, start: new Date(v('when')).toISOString() } }); toast('Клиент записан'); st.stack.pop(); },
+    drawer: () => { st.drawer = !st.drawer; },
+    shopSearch: () => { st.shopSearch = !st.shopSearch; if (!st.shopSearch) st.shopq = ''; },
+    acc: () => { st.closed[d.c] = !st.closed[d.c]; },
+    chooseClub: async () => { await api('/me', { method: 'PATCH', body: { club_id: +id } }); toast('Клуб выбран'); },
+    join: async () => { await api('/join', { body: { name: v('jn'), phone: v('jp'), club_id: +v('jc'), text: v('jt') } }); toast('Заявка отправлена, вам перезвонят'); },
+    feedback: async () => { await api('/feedback', { body: { text: v('fb') } }); toast('Спасибо! Сообщение отправлено'); $('#fb').value = ''; return 'noop'; },
     pickClub: () => { const cs = st.me.clubs; if (cs.length < 2) { toast('Вы работаете в одном клубе'); return 'noop'; } const i = cs.indexOf(clubOf()); st.club = cs[(i + 1) % cs.length].id; toast('Клуб: ' + clubOf().name); },
     toggleAll: () => { toast('Показаны занятия клуба ' + clubOf().name); return 'noop'; },
     calendar: () => { st.cal = true; st.calY = st.calM = undefined; },
