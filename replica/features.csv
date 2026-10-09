@@ -1,0 +1,17 @@
+id,app,feature,priority,clone,note
+F01,client,Выбор клуба,must,yes,
+F02,client,Вход по телефону и паролю,must,yes,вход по SMS требует платного провайдера
+F03,client,Расписание и запись/отмена/лист ожидания,must,yes,
+F04,client,Запись на персональную,must,yes,
+F05,client,Абонементы покупка и заморозка,must,yes,
+F06,client,Депозит пополнение,should,partial,оплата без эквайринга (тестовое пополнение)
+F07,client,История посещений,should,yes,
+F08,client,Новости,should,yes,
+F09,client,Уведомления,should,partial,в приложении, без push
+T01,trainer,Вход тренера и несколько клубов,must,yes,
+T02,trainer,Личное расписание,must,yes,
+T03,trainer,Отметка посещений и запись гостя,must,yes,
+T04,trainer,Персональные: создать/провести/отменить/перенести,must,yes,
+T05,trainer,Клиенты и заметки,must,yes,
+T06,trainer,Продажа пакета тренировок,should,yes,
+T07,trainer,Статистика,could,yes,
