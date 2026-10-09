@@ -1,0 +1,1 @@
+{"name":"fitclub","version":"1.0.0","private":true,"description":"Приложение клиента фитнес-клуба и приложение тренера с общим сервером","scripts":{"start":"node server.js"},"engines":{"node":">=22.5"}}

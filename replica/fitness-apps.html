@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Фитнес-реплики</title>
+<style>
+:root{--bg:#eef0f4;--card:#fff;--text:#1b1d22;--muted:#6b7280;--line:#e5e7eb;--accent:#4f46e5;--accent2:#0f766e;--ok:#16a34a;--warn:#d97706;--bad:#dc2626;--chip:#f3f4f6}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1115;--card:#1a1d23;--text:#eceff4;--muted:#9aa3b2;--line:#2a2f38;--chip:#232831}}
+:root[data-theme="dark"]{--bg:#0f1115;--card:#1a1d23;--text:#eceff4;--muted:#9aa3b2;--line:#2a2f38;--chip:#232831}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header.top{max-width:1100px;margin:0 auto;padding:20px 16px 4px}header.top h1{margin:0;font-size:22px}header.top p{margin:4px 0 0;color:var(--muted)}
+.wrap{display:flex;flex-wrap:wrap;gap:28px;justify-content:center;padding:16px}
+.col{display:flex;flex-direction:column;align-items:center;gap:8px}.col h2{font-size:16px;margin:0}
+.phone{width:min(375px,calc(100vw - 32px));height:740px;background:var(--bg);border:10px solid #111;border-radius:40px;overflow:hidden;display:flex;flex-direction:column;position:relative;box-shadow:0 10px 40px #0003}
+.bar{padding:14px 16px 10px;background:var(--card);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.bar b{font-size:17px;flex:1}.bar button{border:0;background:none;color:var(--accent);font-size:15px;cursor:pointer}
+.scr{flex:1;overflow:auto;padding:12px}
+.tabs{display:flex;background:var(--card);border-top:1px solid var(--line)}
+.tabs button{flex:1;border:0;background:none;padding:8px 0 12px;font-size:11px;color:var(--muted);cursor:pointer}
+.tabs button span{display:block;font-size:20px}.tabs button.on{color:var(--accent)}
+.t2 .tabs button.on,.t2 .bar button{color:var(--accent2)}
+.card{background:var(--card);border-radius:14px;padding:12px;margin-bottom:10px;border:1px solid var(--line)}
+.row{display:flex;align-items:center;gap:10px}.grow{flex:1;min-width:0}.mut{color:var(--muted);font-size:13px}
+.btn{border:0;border-radius:10px;padding:10px 14px;background:var(--accent);color:#fff;font-weight:600;cursor:pointer;font-size:14px}
+.t2 .btn{background:var(--accent2)}.btn.ghost{background:var(--chip);color:var(--text)}.btn.sm{padding:6px 10px;font-size:13px}.btn.full{width:100%}
+.chips{display:flex;gap:6px;overflow:auto;padding-bottom:8px}.chip{flex:none;border:0;border-radius:999px;padding:6px 12px;background:var(--chip);color:var(--text);cursor:pointer;font-size:13px}
+.chip.on{background:var(--accent);color:#fff}.t2 .chip.on{background:var(--accent2)}
+.tag{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--chip)}.tag.ok{background:#16a34a22;color:var(--ok)}.tag.warn{background:#d9770622;color:var(--warn)}.tag.bad{background:#dc262622;color:var(--bad)}
+.hero{border-radius:16px;padding:16px;color:#fff;background:linear-gradient(135deg,#4f46e5,#7c3aed)}.t2 .hero{background:linear-gradient(135deg,#0f766e,#0e7490)}
+.av{width:40px;height:40px;border-radius:50%;background:var(--chip);display:grid;place-items:center;font-weight:700;flex:none}
+.qr{width:180px;height:180px;margin:12px auto;display:grid;grid-template-columns:repeat(21,1fr);background:#fff;padding:8px;border-radius:8px}.qr i{background:#000}.qr i.w{background:#fff}
+.bar2{height:8px;background:var(--chip);border-radius:9px;overflow:hidden}.bar2 i{display:block;height:100%;background:var(--accent)}
+.toast{position:absolute;left:50%;bottom:80px;transform:translateX(-50%);background:#111;color:#fff;padding:8px 14px;border-radius:10px;font-size:13px;opacity:0;transition:.2s;pointer-events:none;white-space:nowrap}.toast.on{opacity:1}
+input,textarea,select{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit;margin:4px 0 8px}
+h3{margin:4px 0 8px;font-size:15px}.sec{margin:14px 0 6px;font-weight:700}
+.stat{flex:1;text-align:center}.stat b{display:block;font-size:20px}
+.notes{max-width:1100px;margin:0 auto;padding:0 16px 40px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<header class="top"><h1>Реплики фитнес-приложений</h1>
+<p>Кликабельные прототипы функционала: клиентское приложение клуба (по типу «Мобифитнес») и приложение тренера (по типу «1С: Фитнес клуб — Тренер»). Код, тексты и стиль свои, данные демо и хранятся в браузере.</p></header>
+<div class="wrap">
+ <div class="col"><h2>Клиент клуба</h2><div class="phone t1" id="A"></div></div>
+ <div class="col"><h2>Тренер</h2><div class="phone t2" id="B"></div></div>
+</div>
+<div class="notes">
+<b>Что реализовано.</b> Клиент: главная с балансом и визитами, расписание групповых занятий с фильтрами и записью/отменой (лист ожидания при заполнении), персональные тренировки с выбором тренера и слота, абонементы и покупка/заморозка, QR-карта для входа, новости и акции, уведомления, профиль. Тренер: расписание на день/неделю, список записанных и отметка посещений, клиенты с карточками, заметками и остатком тренировок, запись клиента на персоналку, статистика и зарплата за период, профиль.
+Оба приложения работают на общих данных: запись клиента на персональную тренировку сразу видна у тренера, а отметка посещения у тренера списывает тренировку с пакета клиента. Кнопка «Сброс» в профиле возвращает демо-данные.
+</div>
+<script>
+const DAYS=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+function today(){const d=new Date();return (d.getDay()+6)%7}
+function seed(){
+ const trainers=[{id:'t1',name:'Анна Смирнова',spec:'Пилатес, стретчинг',price:2500},{id:'t2',name:'Игорь Волков',spec:'Силовой, функционал',price:3000},{id:'t3',name:'Мария Ким',spec:'Йога, сайкл',price:2200}];
+ const kinds=[['Пилатес','t1','Зал 2',12],['Йога','t3','Зал 3',15],['Функциональный тренинг','t2','Зал 1',10],['Сайкл','t3','Сайкл-студия',14],['Стретчинг','t1','Зал 2',12],['Кроссфит','t2','Зал 1',8],['Аквааэробика','t1','Бассейн',16]];
+ const classes=[];let n=0;
+ for(let d=0;d<7;d++)for(const h of ['08:00','10:00','12:30','18:00','19:30','21:00']){const k=kinds[(d*3+n++)%kinds.length];const booked=Math.floor(Math.random()*k[3]);classes.push({id:'c'+n,day:d,time:h,name:k[0],trainer:k[1],room:k[2],cap:k[3],booked,me:false,wait:false,att:{}})}
+ const clients=[{id:'u0',name:'Вы (Алексей П.)',phone:'+7 900 000-00-00',left:6,note:'Цель: спина и осанка',me:true},{id:'u1',name:'Ольга Петрова',phone:'+7 901 111-22-33',left:3,note:'Колено — без прыжков'},{id:'u2',name:'Дмитрий Орлов',phone:'+7 902 222-33-44',left:9,note:'Набор массы'},{id:'u3',name:'Светлана Лис',phone:'+7 903 333-44-55',left:1,note:'Пакет заканчивается'},{id:'u4',name:'Павел Ершов',phone:'+7 904 444-55-66',left:0,note:''}];
+ const pt=[{id:'p1',trainer:'t2',client:'u1',day:today(),time:'09:00',status:'plan'},{id:'p2',trainer:'t2',client:'u2',day:today(),time:'17:00',status:'plan'},{id:'p3',trainer:'t2',client:'u3',day:(today()+1)%7,time:'11:00',status:'plan'},{id:'p4',trainer:'t2',client:'u2',day:(today()+6)%7,time:'17:00',status:'done'}];
+ return {trainers,classes,clients,pt,
+  subs:[{id:'s1',name:'Безлимит 12 мес.',until:'31.08.2027',status:'active',freeze:30}],
+  shop:[{id:'x1',name:'Безлимит 1 мес.',price:6500},{id:'x2',name:'Утро/день 3 мес.',price:12900},{id:'x3',name:'Пакет 10 персональных',price:25000},{id:'x4',name:'Разовое посещение',price:1200}],
+  news:[{t:'Новое направление: стретчинг на пилоне',d:'С понедельника в зале 2, записывайтесь в расписании.'},{t:'Бассейн закрыт на санобработку',d:'В субботу с 08:00 до 14:00.'},{t:'Приведи друга — неделя в подарок',d:'Обоим участникам продлеваем абонемент на 7 дней.'}],
+  notif:[],visits:[{d:'07.10',t:'18:04–19:41'},{d:'05.10',t:'10:12–11:30'},{d:'02.10',t:'19:20–20:55'}],
+  money:4200,meTrainer:'t2',salaryRate:{pt:1200,group:900}};
+}
+let S;try{S=JSON.parse(localStorage.getItem('fit-replica'))}catch(e){}if(!S)S=seed();
+function save(){try{localStorage.setItem('fit-replica',JSON.stringify(S))}catch(e){}render()}
+const tr=id=>S.trainers.find(t=>t.id===id),cl=id=>S.clients.find(c=>c.id===id),me=()=>S.clients[0];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(app,msg){const t=document.querySelector('#'+app+' .toast');t.textContent=msg;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),1600)}
+function notify(m){S.notif.unshift({m,at:new Date().toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})})}
+
+/* ---------- App A: client ---------- */
+const A={tab:'home',day:today(),filter:'Все',sub:null};
+const aTabs=[['home','🏠','Главная'],['sched','📅','Расписание'],['pt','💪','Персонально'],['card','🔳','Карта'],['prof','👤','Профиль']];
+function aScreen(){
+ const m=me();
+ if(A.sub==='notif')return ['Уведомления',S.notif.length?S.notif.map(n=>`<div class="card"><div>${esc(n.m)}</div><div class="mut">${n.at}</div></div>`).join(''):'<p class="mut">Пока пусто</p>'];
+ if(A.sub==='shop')return ['Купить',S.shop.map(x=>`<div class="card row"><div class="grow"><b>${x.name}</b><div class="mut">${x.price.toLocaleString('ru')} ₽</div></div><button class="btn sm" data-a="buy" data-id="${x.id}">Купить</button></div>`).join('')+`<p class="mut">Оплата в прототипе имитируется списанием с баланса.</p>`];
+ if(A.sub==='news')return ['Новости и акции',S.news.map(n=>`<div class="card"><h3>${n.t}</h3><div class="mut">${n.d}</div></div>`).join('')];
+ if(A.tab==='home'){
+  const mine=S.classes.filter(c=>c.me).sort((a,b)=>a.day-b.day||a.time.localeCompare(b.time));
+  const myPt=S.pt.filter(p=>p.client==='u0'&&p.status==='plan');
+  return ['Мой клуб',`<div class="hero"><div class="mut" style="color:#fff9">Добрый день,</div><b style="font-size:20px">${esc(m.name.replace(/^Вы \((.*)\)$/,'$1'))}</b>
+  <div class="row" style="margin-top:12px"><div class="stat"><b>${S.money.toLocaleString('ru')} ₽</b>баланс</div><div class="stat"><b>${m.left}</b>персональных</div><div class="stat"><b>${S.visits.length}</b>визита</div></div></div>
+  <div class="row" style="margin:10px 0;gap:8px"><button class="btn ghost grow" data-a="go" data-s="shop">💳 Купить</button><button class="btn ghost grow" data-a="go" data-s="news">📰 Новости</button><button class="btn ghost" data-a="go" data-s="notif">🔔 ${S.notif.length||''}</button></div>
+  <div class="sec">Мои записи</div>${mine.length||myPt.length?[...mine.map(c=>`<div class="card row"><div class="grow"><b>${c.name}</b><div class="mut">${DAYS[c.day]} ${c.time} · ${c.room} · ${tr(c.trainer).name}</div></div>${c.wait?'<span class="tag warn">лист ожидания</span>':'<span class="tag ok">записан</span>'}</div>`),...myPt.map(p=>`<div class="card row"><div class="grow"><b>Персональная</b><div class="mut">${DAYS[p.day]} ${p.time} · ${tr(p.trainer).name}</div></div><span class="tag ok">записан</span></div>`)].join(''):'<p class="mut">Нет записей — загляните в расписание.</p>'}
+  <div class="sec">Абонементы</div>${S.subs.map(s=>`<div class="card"><div class="row"><b class="grow">${s.name}</b><span class="tag ${s.status==='active'?'ok':'warn'}">${s.status==='active'?'активен':'заморожен'}</span></div><div class="mut">до ${s.until} · заморозка: осталось ${s.freeze} дн.</div><button class="btn sm ghost" style="margin-top:8px" data-a="freeze" data-id="${s.id}">${s.status==='active'?'Заморозить на 7 дней':'Разморозить'}</button></div>`).join('')}`];
+ }
+ if(A.tab==='sched'){
+  const kinds=['Все',...new Set(S.classes.map(c=>c.name))];
+  const list=S.classes.filter(c=>c.day===A.day&&(A.filter==='Все'||c.name===A.filter));
+  return ['Расписание',`<div class="chips">${DAYS.map((d,i)=>`<button class="chip ${i===A.day?'on':''}" data-a="day" data-d="${i}">${d}${i===today()?' •':''}</button>`).join('')}</div>
+  <div class="chips">${kinds.map(k=>`<button class="chip ${k===A.filter?'on':''}" data-a="flt" data-k="${esc(k)}">${k}</button>`).join('')}</div>
+  ${list.map(c=>{const full=c.booked>=c.cap;return `<div class="card"><div class="row"><b style="width:48px">${c.time}</b><div class="grow"><b>${c.name}</b><div class="mut">${tr(c.trainer).name} · ${c.room}</div></div></div>
+  <div class="row" style="margin-top:8px"><div class="grow"><div class="bar2"><i style="width:${Math.min(100,c.booked/c.cap*100)}%"></i></div><div class="mut">мест: ${Math.max(0,c.cap-c.booked)} из ${c.cap}</div></div>
+  ${c.me?`<button class="btn sm ghost" data-a="unbook" data-id="${c.id}">Отменить</button>`:`<button class="btn sm" data-a="book" data-id="${c.id}">${full?'В лист ожидания':'Записаться'}</button>`}</div></div>`}).join('')||'<p class="mut">Нет занятий</p>'}`];
+ }
+ if(A.tab==='pt'){
+  return ['Персональные тренировки',`<div class="card row"><div class="grow">Осталось в пакете</div><b>${m.left}</b></div>`+S.trainers.map(t=>`<div class="card"><div class="row"><div class="av">${t.name[0]}</div><div class="grow"><b>${t.name}</b><div class="mut">${t.spec} · ${t.price} ₽</div></div></div>
+  <div class="chips" style="margin-top:8px">${['09:00','11:00','15:00','17:00','19:00'].map(h=>{const busy=S.pt.some(p=>p.trainer===t.id&&p.day===A.day&&p.time===h&&p.status!=='cancel');return `<button class="chip" ${busy?'disabled style="opacity:.4"':''} data-a="ptbook" data-t="${t.id}" data-h="${h}">${h}</button>`}).join('')}</div><div class="mut">на ${DAYS[A.day]} (день выбирается в расписании)</div></div>`).join('')];
+ }
+ if(A.tab==='card'){
+  let q='';let seedn=7;for(let i=0;i<441;i++){seedn=(seedn*9301+49297)%233280;const r=Math.floor(i/21),c=i%21;const fin=(r<7&&c<7)||(r<7&&c>13)||(r>13&&c<7);const v=fin?((r%6===0||c%6===0||(r%21>1&&r%21<5&&c%21>1&&c%21<5)||(r>15&&r<19&&c>1&&c<5)||(r<5&&r>1&&c>15&&c<19))&&!(r===6&&c<7&&false)):seedn/233280>.5;q+=`<i class="${v?'':'w'}"></i>`}
+  return ['Клубная карта',`<div class="card" style="text-align:center"><b>Покажите код на ресепшене</b><div class="qr">${q}</div><div class="mut">Карта № 000184 · ${esc(m.name)}</div></div><div class="sec">История посещений</div>${S.visits.map(v=>`<div class="card row"><b class="grow">${v.d}</b><span class="mut">${v.t}</span></div>`).join('')}<button class="btn full" data-a="checkin">Имитировать вход в клуб</button>`];
+ }
+ return ['Профиль',`<div class="card row"><div class="av">А</div><div class="grow"><b>${esc(m.name)}</b><div class="mut">${m.phone}</div></div></div>
+ <div class="card"><label class="mut">Пополнить баланс, ₽</label><input id="topup" type="number" value="3000"><button class="btn full" data-a="topup">Пополнить</button></div>
+ <button class="btn ghost full" data-a="reset">Сброс демо-данных</button>`];
+}
+
+/* ---------- App B: trainer ---------- */
+const B={tab:'day',day:today(),open:null,client:null};
+const bTabs=[['day','🗓','Расписание'],['clients','👥','Клиенты'],['stats','📊','Статистика'],['prof','⚙️','Профиль']];
+function bItems(day){const t=S.meTrainer;
+ return [...S.classes.filter(c=>c.trainer===t&&c.day===day).map(c=>({k:'g',time:c.time,c})),...S.pt.filter(p=>p.trainer===t&&p.day===day&&p.status!=='cancel').map(p=>({k:'p',time:p.time,p}))].sort((a,b)=>a.time.localeCompare(b.time))}
+function bScreen(){
+ const t=tr(S.meTrainer);
+ if(B.client){const c=cl(B.client);const hist=S.pt.filter(p=>p.client===c.id&&p.trainer===t.id);
+  return ['Клиент',`<div class="card row"><div class="av">${c.name[0]}</div><div class="grow"><b>${esc(c.name)}</b><div class="mut">${c.phone}</div></div><span class="tag ${c.left>2?'ok':c.left?'warn':'bad'}">${c.left} трен.</span></div>
+  <div class="card"><label class="mut">Заметка тренера</label><textarea id="cnote" rows="3">${esc(c.note)}</textarea><button class="btn sm" data-b="note">Сохранить</button></div>
+  <div class="card"><h3>Записать на персональную</h3><select id="pday">${DAYS.map((d,i)=>`<option value="${i}" ${i===B.day?'selected':''}>${d}</option>`).join('')}</select><select id="ptime">${['07:00','09:00','11:00','13:00','15:00','17:00','19:00','20:00'].map(h=>`<option>${h}</option>`).join('')}</select><button class="btn full" data-b="addpt">Записать</button></div>
+  <div class="sec">История</div>${hist.map(p=>`<div class="card row"><span class="grow">${DAYS[p.day]} ${p.time}</span><span class="tag ${p.status==='done'?'ok':p.status==='miss'?'bad':''}">${{plan:'запланирована',done:'проведена',miss:'неявка'}[p.status]}</span></div>`).join('')||'<p class="mut">Нет тренировок</p>'}`,true];}
+ if(B.open){const it=B.open;
+  if(it.startsWith('c')){const c=S.classes.find(x=>x.id===it);const names=S.clients.slice(0,Math.min(S.clients.length,Math.max(1,c.booked)));if(c.me&&!names.includes(me()))names.unshift(me());
+   return [c.name,`<div class="card"><b>${DAYS[c.day]} ${c.time} · ${c.room}</b><div class="mut">Записано ${c.booked} из ${c.cap}</div></div><div class="sec">Отметка посещений</div>${names.map(u=>`<div class="card row"><div class="av">${u.name[0]}</div><b class="grow">${esc(u.name)}</b><button class="btn sm ${c.att[u.id]===true?'':'ghost'}" data-b="att" data-c="${c.id}" data-u="${u.id}" data-v="1">✓</button><button class="btn sm ${c.att[u.id]===false?'':'ghost'}" style="${c.att[u.id]===false?'background:var(--bad)':''}" data-b="att" data-c="${c.id}" data-u="${u.id}" data-v="0">✕</button></div>`).join('')}`,true]}
+  const p=S.pt.find(x=>x.id===it),c=cl(p.client);
+  return ['Персональная',`<div class="card row"><div class="av">${c.name[0]}</div><div class="grow"><b>${esc(c.name)}</b><div class="mut">${DAYS[p.day]} ${p.time} · осталось ${c.left}</div></div></div>${c.note?`<div class="card">📝 ${esc(c.note)}</div>`:''}
+  <div class="row" style="gap:8px"><button class="btn grow" data-b="pt" data-id="${p.id}" data-v="done">Проведена</button><button class="btn ghost grow" data-b="pt" data-id="${p.id}" data-v="miss">Неявка</button><button class="btn ghost grow" data-b="pt" data-id="${p.id}" data-v="cancel">Отменить</button></div>
+  <p class="mut">«Проведена» и «Неявка» списывают тренировку из пакета клиента.</p>`,true]}
+ if(B.tab==='day'){const items=bItems(B.day);
+  return ['Мой день',`<div class="chips">${DAYS.map((d,i)=>`<button class="chip ${i===B.day?'on':''}" data-b="day" data-d="${i}">${d}${i===today()?' •':''}</button>`).join('')}</div>
+  <div class="hero"><b>${t.name}</b><div>${items.length} занятий на ${DAYS[B.day]}</div></div><div style="height:10px"></div>
+  ${items.map(i=>i.k==='g'?`<div class="card row" data-b="open" data-id="${i.c.id}" style="cursor:pointer"><b style="width:48px">${i.time}</b><div class="grow"><b>${i.c.name}</b><div class="mut">Группа · ${i.c.room} · ${i.c.booked}/${i.c.cap}</div></div><span class="tag">${Object.keys(i.c.att).length?'отмечено':'›'}</span></div>`
+   :`<div class="card row" data-b="open" data-id="${i.p.id}" style="cursor:pointer"><b style="width:48px">${i.time}</b><div class="grow"><b>${esc(cl(i.p.client).name)}</b><div class="mut">Персональная</div></div><span class="tag ${i.p.status==='done'?'ok':i.p.status==='miss'?'bad':''}">${{plan:'›',done:'проведена',miss:'неявка'}[i.p.status]}</span></div>`).join('')||'<p class="mut">Свободный день</p>'}`];}
+ if(B.tab==='clients')return ['Клиенты',`<input id="q" placeholder="Поиск по имени" value="${esc(B.q||'')}">`+S.clients.filter(c=>!B.q||c.name.toLowerCase().includes(B.q.toLowerCase())).map(c=>`<div class="card row" data-b="client" data-id="${c.id}" style="cursor:pointer"><div class="av">${c.name[0]}</div><div class="grow"><b>${esc(c.name)}</b><div class="mut">${esc(c.note||'—')}</div></div><span class="tag ${c.left>2?'ok':c.left?'warn':'bad'}">${c.left}</span></div>`).join('')];
+ if(B.tab==='stats'){const done=S.pt.filter(p=>p.trainer===t.id&&p.status==='done').length,miss=S.pt.filter(p=>p.trainer===t.id&&p.status==='miss').length;const groups=S.classes.filter(c=>c.trainer===t.id&&Object.keys(c.att).length).length;const sal=done*S.salaryRate.pt+groups*S.salaryRate.group;
+  return ['Статистика',`<div class="card row"><div class="stat"><b>${done}</b>персональных</div><div class="stat"><b>${groups}</b>групповых</div><div class="stat"><b>${miss}</b>неявок</div></div>
+  <div class="card"><h3>Начислено за неделю</h3><b style="font-size:24px">${sal.toLocaleString('ru')} ₽</b><div class="mut">${S.salaryRate.pt} ₽ за персональную · ${S.salaryRate.group} ₽ за групповое занятие</div></div>
+  <div class="card"><h3>Клиенты с заканчивающимся пакетом</h3>${S.clients.filter(c=>c.left<=1).map(c=>`<div class="row" style="padding:4px 0"><span class="grow">${esc(c.name)}</span><span class="tag ${c.left?'warn':'bad'}">${c.left}</span></div>`).join('')}</div>`]}
+ return ['Профиль',`<div class="card"><label class="mut">Я тренер</label><select id="meT">${S.trainers.map(x=>`<option value="${x.id}" ${x.id===t.id?'selected':''}>${x.name}</option>`).join('')}</select><div class="mut">${t.spec}</div></div><button class="btn ghost full" data-a="reset">Сброс демо-данных</button>`];
+}
+
+function shell(id,title,body,tabs,cur,back){
+ return `<div class="bar">${back?`<button data-back="1">‹ Назад</button>`:''}<b>${title}</b></div><div class="scr">${body}</div>
+ <nav class="tabs">${tabs.map(t=>`<button class="${t[0]===cur?'on':''}" data-tab="${t[0]}"><span>${t[1]}</span>${t[2]}</button>`).join('')}</nav><div class="toast"></div>`}
+function render(){
+ const [ta,ba]=aScreen();const a=document.getElementById('A');const sa=a.querySelector('.scr')?.scrollTop||0;
+ a.innerHTML=shell('A',ta,ba,aTabs,A.tab,!!A.sub);
+ const [tb,bb,backB]=bScreen();const b=document.getElementById('B');
+ b.innerHTML=shell('B',tb,bb,bTabs,B.tab,backB);
+ const q=document.getElementById('q');if(q){q.oninput=()=>{B.q=q.value;render();const n=document.getElementById('q');n.focus();n.setSelectionRange(n.value.length,n.value.length)}}
+ const mt=document.getElementById('meT');if(mt)mt.onchange=()=>{S.meTrainer=mt.value;save()};
+}
+document.getElementById('A').addEventListener('click',e=>{
+ const tab=e.target.closest('[data-tab]');if(tab){A.tab=tab.dataset.tab;A.sub=null;return render()}
+ if(e.target.closest('[data-back]')){A.sub=null;return render()}
+ const el=e.target.closest('[data-a]');if(!el)return;const d=el.dataset,m=me();
+ switch(d.a){
+  case 'go':A.sub=d.s;break;
+  case 'day':A.day=+d.d;break;
+  case 'flt':A.filter=d.k;break;
+  case 'book':{const c=S.classes.find(x=>x.id===d.id);c.me=true;if(c.booked>=c.cap){c.wait=true;toast('A','Вы в листе ожидания');notify(`Лист ожидания: ${c.name}, ${DAYS[c.day]} ${c.time}`)}else{c.booked++;toast('A','Вы записаны');notify(`Запись: ${c.name}, ${DAYS[c.day]} ${c.time}`)}return save()}
+  case 'unbook':{const c=S.classes.find(x=>x.id===d.id);if(!c.wait)c.booked--;c.me=false;c.wait=false;toast('A','Запись отменена');notify(`Отмена: ${c.name}`);return save()}
+  case 'ptbook':{if(m.left<=0){toast('A','Пакет закончился — купите тренировки');A.sub='shop';return render()}S.pt.push({id:'p'+Date.now(),trainer:d.t,client:'u0',day:A.day,time:d.h,status:'plan'});toast('A','Записаны к тренеру');notify(`Персональная: ${tr(d.t).name}, ${DAYS[A.day]} ${d.h}`);return save()}
+  case 'buy':{const x=S.shop.find(s=>s.id===d.id);if(S.money<x.price){toast('A','Недостаточно средств');return}S.money-=x.price;if(x.id==='x3')m.left+=10;else S.subs.push({id:'s'+Date.now(),name:x.name,until:'—',status:'active',freeze:14});toast('A','Оплачено');notify('Покупка: '+x.name);return save()}
+  case 'freeze':{const s=S.subs.find(x=>x.id===d.id);if(s.status==='active'){if(s.freeze<7)return toast('A','Не хватает дней заморозки');s.freeze-=7;s.status='frozen'}else s.status='active';return save()}
+  case 'checkin':{const n=new Date();S.visits.unshift({d:n.toLocaleDateString('ru',{day:'2-digit',month:'2-digit'}),t:n.toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})+'–…'});toast('A','Добро пожаловать!');return save()}
+  case 'topup':{S.money+=Math.max(0,+document.getElementById('topup').value||0);toast('A','Баланс пополнен');return save()}
+  case 'reset':S=seed();return save();
+ }render()});
+document.getElementById('B').addEventListener('click',e=>{
+ const tab=e.target.closest('[data-tab]');if(tab){B.tab=tab.dataset.tab;B.open=B.client=null;return render()}
+ if(e.target.closest('[data-back]')){if(B.open)B.open=null;else B.client=null;return render()}
+ const ra=e.target.closest('[data-a="reset"]');if(ra){S=seed();return save()}
+ const el=e.target.closest('[data-b]');if(!el)return;const d=el.dataset;
+ switch(d.b){
+  case 'day':B.day=+d.d;break;
+  case 'open':B.open=d.id;break;
+  case 'client':B.client=d.id;break;
+  case 'att':{const c=S.classes.find(x=>x.id===d.c);c.att[d.u]=d.v==='1';return save()}
+  case 'pt':{const p=S.pt.find(x=>x.id===d.id),c=cl(p.client);if(p.status==='plan'&&d.v!=='cancel')c.left=Math.max(0,c.left-1);p.status=d.v;if(c.me)notify(d.v==='cancel'?'Тренер отменил персональную тренировку':d.v==='done'?'Тренировка проведена, списана из пакета':'Отмечена неявка на тренировку');toast('B','Сохранено');if(d.v==='cancel')B.open=null;return save()}
+  case 'note':{cl(B.client).note=document.getElementById('cnote').value;toast('B','Заметка сохранена');return save()}
+  case 'addpt':{const day=+document.getElementById('pday').value,time=document.getElementById('ptime').value;if(S.pt.some(p=>p.trainer===S.meTrainer&&p.day===day&&p.time===time&&p.status!=='cancel'))return toast('B','Это время занято');S.pt.push({id:'p'+Date.now(),trainer:S.meTrainer,client:B.client,day,time,status:'plan'});if(cl(B.client).me)notify(`Тренер записал вас: ${DAYS[day]} ${time}`);toast('B','Клиент записан');return save()}
+ }render()});
+render();
+</script>
+</body>
+</html>
