@@ -37,11 +37,12 @@ CREATE TABLE IF NOT EXISTS news(id INTEGER PRIMARY KEY, club_id INTEGER NOT NULL
 CREATE TABLE IF NOT EXISTS notifications(id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), text TEXT NOT NULL, read INTEGER DEFAULT 0, created TEXT NOT NULL, link_type TEXT, link_id INTEGER);
 CREATE TABLE IF NOT EXISTS favorites(trainer_id INTEGER NOT NULL, client_id INTEGER NOT NULL, PRIMARY KEY(trainer_id,client_id));
 CREATE TABLE IF NOT EXISTS work_hours(trainer_id INTEGER NOT NULL, weekday INTEGER NOT NULL, start TEXT, end TEXT, PRIMARY KEY(trainer_id,weekday));
+CREATE TABLE IF NOT EXISTS login_codes(phone TEXT PRIMARY KEY, code TEXT NOT NULL, expires TEXT NOT NULL, tries INTEGER NOT NULL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS feedback(id INTEGER PRIMARY KEY, user_id INTEGER, club_id INTEGER, kind TEXT NOT NULL, name TEXT, phone TEXT, text TEXT NOT NULL, created TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS notes(trainer_id INTEGER NOT NULL, client_id INTEGER NOT NULL, text TEXT NOT NULL, PRIMARY KEY(trainer_id,client_id));
 `);
 
-for (const m of ['ALTER TABLE clubs ADD COLUMN phone TEXT', "ALTER TABLE products ADD COLUMN category TEXT DEFAULT 'Абонементы'"]) { try { db.exec(m); } catch (e) { /* column exists */ } }
+for (const m of ['ALTER TABLE clubs ADD COLUMN phone TEXT', 'ALTER TABLE clubs ADD COLUMN lat REAL', 'ALTER TABLE clubs ADD COLUMN lng REAL', 'ALTER TABLE clubs ADD COLUMN description TEXT', 'ALTER TABLE clubs ADD COLUMN hours TEXT', "ALTER TABLE products ADD COLUMN category TEXT DEFAULT 'Абонементы'"]) { try { db.exec(m); } catch (e) { /* column exists */ } }
 
 // ---------- helpers ----------
 const now = () => new Date().toISOString();
@@ -62,6 +63,9 @@ const fmt = iso => new Date(iso).toLocaleString('ru-RU', { day: '2-digit', month
 // ---------- seed ----------
 if (!one('SELECT 1 x FROM clubs')) tx(() => {
   run("INSERT INTO clubs(name,city,address,phone) VALUES('FitClub Центр','Москва','ул. Примерная, 1','+74950000001'),('FitClub Север','Москва','пр. Тестовый, 15','+74950000002'),('FitClub Нева','Санкт-Петербург','наб. Демо, 7','+78120000003')");
+  const H = JSON.stringify(['16:00-22:00', '16:00-22:00', '16:00-22:00', '16:00-22:00', '16:00-22:00', '09:00-21:00', '09:00-21:00']);
+  const D = 'Фитнес-клуб с групповыми программами, тренажёрным залом и персональными тренировками. Удобная запись через приложение.';
+  for (const [id, lat, lng] of [[1, 55.7558, 37.6176], [2, 55.8, 37.6], [3, 59.93, 30.33]]) run('UPDATE clubs SET lat=?,lng=?,description=?,hours=? WHERE id=?', lat, lng, D, H, id);
   const u = (phone, name, role, extra = {}) => run('INSERT INTO users(phone,name,role,pass,balance,spec,price,club_id) VALUES(?,?,?,?,?,?,?,?)',
     phone, name, role, hash('1234'), extra.balance || 0, extra.spec || null, extra.price || null, extra.club || 1).lastInsertRowid;
   const t1 = u('79990000001', 'Игорь Волков', 'trainer', { spec: 'Силовой, функциональный', price: 3000 });
@@ -138,7 +142,31 @@ function slotFree(tid, start, exceptId = 0) {
 const routes = [];
 const R = (method, pattern, role, fn) => routes.push({ method, re: new RegExp('^' + pattern.replace(/:(\w+)/g, '(?<$1>[^/]+)') + '$'), role, fn });
 
-R('GET', '/api/clubs', null, () => q('SELECT * FROM clubs ORDER BY city,name'));
+// Current load: people who checked in during the last 90 minutes.
+const clubLoad = id => one('SELECT COUNT(*) n FROM visits WHERE club_id=? AND at>?', id, new Date(Date.now() - 90 * 6e4).toISOString()).n;
+R('GET', '/api/clubs', null, () => q('SELECT * FROM clubs ORDER BY city,name').map(c => ({ ...c, load: clubLoad(c.id) })));
+R('GET', '/api/clubs/:id', null, ({ params }) => { const c = one('SELECT * FROM clubs WHERE id=?', +params.id); if (!c) throw new E(404, 'Клуб не найден'); return { ...c, load: clubLoad(c.id), hours: c.hours ? JSON.parse(c.hours) : [] }; });
+// Client sign-in: phone + one-time code (as in the original: no password). Without an SMS provider the code is returned in the response (test mode).
+R('POST', '/api/auth/code', null, (_, b) => {
+  const phone = normPhone(b.phone); if (phone.length !== 11) throw new E(400, 'Неверный номер телефона');
+  if (!b.consent_rules || !b.consent_offer) throw new E(400, 'Нужно согласие с правилами и офертой');
+  const code = String(crypto.randomInt(1000, 10000));
+  run('INSERT INTO login_codes VALUES(?,?,?,0) ON CONFLICT(phone) DO UPDATE SET code=excluded.code, expires=excluded.expires, tries=0', phone, code, new Date(Date.now() + 5 * 6e4).toISOString());
+  if (process.env.SMS_PROVIDER) { /* send code via your SMS provider here */ return { sent: true }; }
+  console.log(`Код входа для +${phone}: ${code}`); return { sent: true, test_code: code };
+});
+R('POST', '/api/auth/verify', null, (_, b) => tx(() => {
+  const phone = normPhone(b.phone), row = one('SELECT * FROM login_codes WHERE phone=?', phone);
+  if (!row || row.expires < now()) throw new E(400, 'Код устарел, запросите новый');
+  if (row.tries >= 5) throw new E(429, 'Слишком много попыток, запросите новый код');
+  if (String(b.code) !== row.code) { run('UPDATE login_codes SET tries=tries+1 WHERE phone=?', phone); throw new E(400, 'Неверный код'); }
+  run('DELETE FROM login_codes WHERE phone=?', phone);
+  let u = one('SELECT * FROM users WHERE phone=?', phone);
+  if (u && u.role !== 'client') throw new E(403, 'Это номер сотрудника — войдите в приложение тренера');
+  if (!u) { const id = run("INSERT INTO users(phone,name,role,pass,club_id) VALUES(?,?,'client',?,?)", phone, String(b.name || 'Клиент').trim().slice(0, 80) || 'Клиент', hash(crypto.randomBytes(12).toString('hex')), +b.club_id || 1).lastInsertRowid; u = { id }; }
+  else if (+b.club_id) run('UPDATE users SET club_id=? WHERE id=?', +b.club_id, u.id);
+  return login(u.id);
+}));
 R('POST', '/api/register', null, (_, b) => {
   const phone = normPhone(b.phone); if (phone.length !== 11) throw new E(400, 'Неверный номер телефона');
   if (!b.name || String(b.name).trim().length < 2) throw new E(400, 'Укажите имя');
@@ -183,10 +211,10 @@ R('GET', '/api/home', 'client', ({ u }) => ({
   ].sort((a, b) => a.start.localeCompare(b.start)),
   visits: one('SELECT COUNT(*) n FROM visits WHERE user_id=?', u.id).n,
 }));
-R('GET', '/api/schedule', 'any', ({ u, query }) => {
-  const club = +query.club || u.club_id; const from = new Date(query.date || Date.now()); from.setUTCHours(0, 0, 0, 0);
+R('GET', '/api/schedule', 'opt', ({ u, query }) => {
+  const club = +query.club || u?.club_id || 1; const from = new Date(query.date || Date.now()); from.setUTCHours(0, 0, 0, 0);
   const to = new Date(from.getTime() + 864e5);
-  return q('SELECT * FROM classes WHERE club_id=? AND start>=? AND start<? ORDER BY start', club, from.toISOString(), to.toISOString()).map(c => classView(c, u.id));
+  return q('SELECT * FROM classes WHERE club_id=? AND start>=? AND start<? ORDER BY start', club, from.toISOString(), to.toISOString()).map(c => classView(c, u?.id));
 });
 R('POST', '/api/classes/:id/book', 'client', ({ u, params }) => tx(() => {
   const c = one('SELECT * FROM classes WHERE id=?', +params.id); if (!c) throw new E(404, 'Занятие не найдено');
@@ -207,8 +235,8 @@ R('POST', '/api/classes/:id/cancel', 'client', ({ u, params }) => tx(() => {
   if (new Date(c.start) - Date.now() < 2 * 36e5 && b.status === 'booked') throw new E(400, 'Отмена возможна не позднее чем за 2 часа');
   run("UPDATE bookings SET status='cancelled' WHERE id=?", b.id); promoteWaitlist(c.id); return { ok: true };
 }));
-R('GET', '/api/trainers', 'any', ({ u, query }) => q('SELECT u.id,u.name,u.spec,u.price FROM users u JOIN trainer_clubs t ON t.trainer_id=u.id WHERE t.club_id=?', +query.club || u.club_id));
-R('GET', '/api/trainers/:id/slots', 'any', ({ params, query }) => {
+R('GET', '/api/trainers', 'opt', ({ u, query }) => q('SELECT u.id,u.name,u.spec,u.price FROM users u JOIN trainer_clubs t ON t.trainer_id=u.id WHERE t.club_id=?', +query.club || u?.club_id || 1));
+R('GET', '/api/trainers/:id/slots', 'opt', ({ params, query }) => {
   const day = new Date(query.date || Date.now()); day.setUTCHours(0, 0, 0, 0);
   const res = [];
   for (let h = 4; h <= 18; h++) { const s = new Date(day.getTime() + h * 36e5); if (s > new Date() && slotFree(+params.id, s.toISOString())) res.push(s.toISOString()); }
@@ -234,7 +262,7 @@ R('POST', '/api/personal/:id/cancel', 'client', ({ u, params }) => tx(() => {
   const p = one("SELECT * FROM personal WHERE id=? AND client_id=? AND status='planned'", +params.id, u.id); if (!p) throw new E(404, 'Не найдено');
   run("UPDATE personal SET status='cancelled' WHERE id=?", p.id); notify(p.trainer_id, `${u.name} отменил(а) тренировку ${fmt(p.start)}`); return { ok: true };
 }));
-R('GET', '/api/products', 'client', ({ u, query }) => q("SELECT * FROM products WHERE club_id=? AND name LIKE ? ORDER BY category, price", u.club_id, '%' + String(query.q || '') + '%'));
+R('GET', '/api/products', 'opt', ({ u, query }) => q("SELECT * FROM products WHERE club_id=? AND name LIKE ? ORDER BY category, price", +query.club || u?.club_id || 1, '%' + String(query.q || '') + '%'));
 R('GET', '/api/my-trainings', 'client', ({ u }) => [
   ...q("SELECT c.id,c.name,c.start,c.minutes,c.room,t.name trainer,b.status FROM bookings b JOIN classes c ON c.id=b.class_id LEFT JOIN users t ON t.id=c.trainer_id WHERE b.user_id=? AND b.status<>'cancelled' ORDER BY c.start DESC LIMIT 60", u.id).map(x => ({ ...x, type: 'class' })),
   ...q("SELECT p.id,'Персональная тренировка' name,p.start,60 minutes,t.name trainer,p.status FROM personal p JOIN users t ON t.id=p.trainer_id WHERE p.client_id=? AND p.status<>'cancelled' ORDER BY p.start DESC LIMIT 60", u.id).map(x => ({ ...x, type: 'personal' })),
@@ -292,7 +320,7 @@ R('POST', '/api/checkin', 'client', ({ u }) => {
   if (!activeMembership(u.id, u.club_id) && !packOf(u.id, u.club_id)) throw new E(402, 'Нет действующего абонемента');
   run('INSERT INTO visits(user_id,club_id,at) VALUES(?,?,?)', u.id, u.club_id, now()); return { ok: true };
 });
-R('GET', '/api/news', 'any', ({ u, query }) => q('SELECT * FROM news WHERE club_id=? ORDER BY id DESC', +query.club || u.club_id));
+R('GET', '/api/news', 'opt', ({ u, query }) => q('SELECT * FROM news WHERE club_id=? ORDER BY id DESC', +query.club || u?.club_id || 1));
 R('GET', '/api/notifications', 'any', ({ u }) => { const r = q('SELECT * FROM notifications WHERE user_id=? ORDER BY id DESC LIMIT 50', u.id); run('UPDATE notifications SET read=1 WHERE user_id=?', u.id); return r; });
 
 // --- trainer app ---
@@ -444,9 +472,9 @@ http.createServer(async (req, res) => {
     if (r.role) {
       ctx.token = (req.headers.authorization || '').replace(/^Bearer /, '');
       ctx.u = ctx.token && one('SELECT u.* FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token=?', ctx.token);
-      if (!ctx.u) throw new E(401, 'Войдите заново');
+      if (!ctx.u && r.role !== 'opt') throw new E(401, 'Войдите заново');
       const role = ctx.u.role === 'admin' ? r.role : ctx.u.role;
-      if (r.role !== 'any' && role !== r.role) throw new E(403, 'Нет доступа');
+      if (ctx.u && r.role !== 'any' && r.role !== 'opt' && role !== r.role) throw new E(403, 'Нет доступа');
     }
     send(200, await r.fn(ctx, body));
   } catch (e) {
