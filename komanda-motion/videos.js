@@ -386,6 +386,8 @@ const V4 = { name: 'my-ryadom', shots: [
 ] };
 
 const VIDEOS = { 1: V1, 2: V2, 3: V3, 4: V4 };
-defineVideo(VIDEOS[+Q.get('v') || 1]);
-window.VIDEO_NAME = VIDEO.name;
-startPlayer();
+if (!window.NO_VIDEO_PLAYER) {
+  defineVideo(VIDEOS[+Q.get('v') || 1]);
+  window.VIDEO_NAME = VIDEO.name;
+  startPlayer();
+}

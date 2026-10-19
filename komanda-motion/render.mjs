@@ -21,7 +21,7 @@ const out = path.join(dir, 'out'); fs.mkdirSync(out, { recursive: true });
 
 const browser = await pw.chromium.launch({ args: ['--font-render-hinting=none', '--force-color-profile=srgb'] });
 const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
-await page.goto(pathToFileURL(path.join(dir, 'index.html')).href + `?w=${W}&h=${H}&v=${V}&render=1`);
+await page.goto(pathToFileURL(path.join(dir, process.env.PAGE || 'index.html')).href + `?w=${W}&h=${H}&v=${V}&render=1${process.env.DEMO ? '&demo=1' : ''}`);
 await page.waitForFunction(() => window.READY === true);
 // прогрев эмодзи-шрифта
 await page.evaluate(() => { window.seek(9); });
@@ -56,7 +56,7 @@ ff.stdin.end();
 await new Promise(r => ff.on('close', r));
 await browser.close();
 if (music) {
-  await new Promise(r => spawn('ffmpeg', ['-y', '-loglevel', 'error', '-i', tmp, '-i', music, '-filter:a', `volume=0.35,afade=t=out:st=${DURATION - 1.2}:d=1.2`,
+  await new Promise(r => spawn('ffmpeg', ['-y', '-loglevel', 'error', '-i', tmp, '-stream_loop', '-1', '-i', music, '-filter:a', `volume=0.35,afade=t=out:st=${DURATION - 1.2}:d=1.2`,
     '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-shortest', file], { stdio: 'inherit' }).on('close', r));
   fs.unlinkSync(tmp);
 }
