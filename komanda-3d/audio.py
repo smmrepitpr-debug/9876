@@ -35,7 +35,7 @@ for b in range(nb):
 def noise(L, r, k=3): return lp(rng.standard_normal(int(L * SR)), k) * env(L, .005, r)
 for e in ev['events']:
     ty, s = e['type'], e['t']
-    if ty == 'click': add(tone(1800, .05, .001, .012, (1,)) * .35 + noise(.04, .01, 2) * .15, s)
+    if ty == 'click': add(tone(1800, .05, .001, .012, (1,)) * .35, s); add(noise(.04, .01, 2) * .15, s)
     elif ty == 'whoosh':
         L = .5; tt = np.arange(int(L * SR)) / SR; w = lp(rng.standard_normal(len(tt)), 8) * np.sin(np.pi * tt / L) ** 2 * .25; add(w, s - .25, pan=-.2)
     elif ty == 'pop': add(tone(660, .18, .002, .05, (1, .2)) * .18, s)
