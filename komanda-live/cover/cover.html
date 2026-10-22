@@ -10,6 +10,14 @@ html,body{width:var(--w);height:var(--h);margin:0;overflow:hidden;background:#02
 .t1 b{color:#3DDC97;text-shadow:0 0 40px rgba(61,220,151,.5)}
 .chips{margin-top:22px;display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
 .chips span{padding:10px 22px;border-radius:999px;background:rgba(61,220,151,.16);border:2px solid rgba(61,220,151,.6);font-weight:800;font-size:var(--cs);color:#E9FFF5}
+
+body.desk .strips{inset:0;left:auto;right:0;width:1180px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr;gap:10px;padding:10px;transform:none}
+body.desk .strips div{transform:none;border-radius:20px}
+body.desk .shade{background:linear-gradient(90deg,#02140D 0%,#02140D 37%,rgba(2,20,13,0) 39%)}
+body.desk .plate{left:70px;top:50%;transform:translateY(-50%);text-align:left;width:700px}
+body.desk .brand{justify-content:flex-start}
+body.desk .chips{justify-content:flex-start}
+body.desk .tag{position:absolute;left:14px;bottom:12px;padding:6px 14px;border-radius:999px;background:rgba(2,20,13,.75);color:#fff;font-weight:800;font-size:22px}
 </style></head><body>
 <div class="strips"></div><div class="shade"></div>
 <div class="plate"><div class="brand"><div class="logo" id="lg"></div>Команда</div>
@@ -19,11 +27,13 @@ html,body{width:var(--w);height:var(--h);margin:0;overflow:hidden;background:#02
 <script>
 const q=new URLSearchParams(location.search), m=q.get('m');
 const S=document.documentElement.style;
+if(m!=='mob')document.body.classList.add('desk');
 if(m==='mob'){S.setProperty('--w','1080px');S.setProperty('--h','1920px');S.setProperty('--pw','960px');S.setProperty('--bs','80px');S.setProperty('--ts','110px');S.setProperty('--cs','34px');}
-else{S.setProperty('--w','1920px');S.setProperty('--h','768px');S.setProperty('--pw','1150px');S.setProperty('--bs','64px');S.setProperty('--ts','84px');S.setProperty('--cs','26px');}
-const ids=['7130','873','303','52097','33192','40276'];
+else{S.setProperty('--w','1920px');S.setProperty('--h','768px');S.setProperty('--pw','700px');S.setProperty('--bs','64px');S.setProperty('--ts','78px');S.setProperty('--cs','24px');}
+const ids=[['7130','0010','50% 60%'],['873','0040','45% 40%'],['303','0075','60% 35%'],['44414','0075','50% 45%'],['33192','0040','50% 50%'],['40276','0040','45% 40%']];
 const st=document.querySelector('.strips');
-ids.forEach((id,i)=>{const d=document.createElement('div');d.style.backgroundImage=`url(../frames/${id}-n/0040.jpg)`;d.style.setProperty('--dy',(i%2?18:-18)+'px');st.appendChild(d);});
+const names=['Сноуборд','Теннис','Бачата','Армрестлинг','Плавание','Бокс'];
+ids.forEach(([id,fr,pos],i)=>{const d=document.createElement('div');d.style.backgroundImage=m==='mob'?`url(../frames/${id}-n/${fr}.jpg)`:`url(img/${id}.jpg)`;d.style.backgroundPosition=m==='mob'?pos:'50% 40%';if(m!=='mob')d.innerHTML=`<span class="tag">${names[i]}</span>`;d.style.setProperty('--dy',(i%2?18:-18)+'px');st.appendChild(d);});
 if(m==='mob'){st.style.cssText='position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,1fr);gap:12px;padding:12px;transform:none';[...st.children].forEach(d=>{d.style.borderRadius='26px';d.style.transform='none';});}
 const lg=document.getElementById('lg'); const s=m==='mob'?110:84; lg.style.width=lg.style.height=s+'px'; lg.style.borderRadius=s*.24+'px'; lg.innerHTML=LOGO_SVG(s*.7);
 document.fonts.load('900 50px Rubik').then(()=>window.READY=true);
