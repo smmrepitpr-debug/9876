@@ -8,12 +8,12 @@ const dir = path.dirname(fileURLToPath(import.meta.url)), out = path.join(dir, '
 const V = process.env.V || 1, FPS = +(process.env.FPS || 30);
 const browser = await pw.chromium.launch({ args: ['--font-render-hinting=none', '--force-color-profile=srgb'] });
 const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
-await page.goto(pathToFileURL(path.join(dir, 'index.html')).href + `?v=${V}&render=1`);
+await page.goto(pathToFileURL(path.join(dir, process.env.PAGE || 'index.html')).href + `?v=${V}&n=${process.env.N || ''}&render=1`);
 await page.waitForFunction(() => window.READY === true);
 await page.waitForTimeout(400);
 const shot = async t => { await page.evaluate(async t => { await window.seek(t); }, t); return page.screenshot({ type: 'jpeg', quality: 92 }); };
 if (process.argv[2] === 'still') {
-  const t = +process.argv[3]; const f = path.join(out, `still-v${V}-${t}.jpg`); fs.writeFileSync(f, await shot(t)); console.log(f); await browser.close(); process.exit(0);
+  const t = +process.argv[3]; const f = path.join(out, `still-${process.env.N || V}-${t}.jpg`); fs.writeFileSync(f, await shot(t)); console.log(f); await browser.close(); process.exit(0);
 }
 const { d, name, events } = await page.evaluate(() => ({ d: window.DURATION, name: window.VIDEO_NAME, events: window.EVENTS }));
 const base = path.join(out, `komanda-live-${name}`);
