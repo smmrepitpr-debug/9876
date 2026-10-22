@@ -28,13 +28,13 @@ body.desk .tag{position:absolute;left:14px;bottom:12px;padding:6px 14px;border-r
 <script>
 const q=new URLSearchParams(location.search), m=q.get('m');
 const S=document.documentElement.style;
-if(m!=='mob')document.body.classList.add('desk');
+if(m!=='mob')document.body.classList.add('desk'); else document.querySelector('.chips').style.display='none';
 if(m==='mob'){S.setProperty('--w','1080px');S.setProperty('--h','1920px');S.setProperty('--pw','960px');S.setProperty('--bs','80px');S.setProperty('--ts','110px');S.setProperty('--cs','34px');}
 else{S.setProperty('--w','1920px');S.setProperty('--h','768px');S.setProperty('--pw','700px');S.setProperty('--bs','64px');S.setProperty('--ts','62px');S.setProperty('--cs','22px');}
 const ids=[['7130','0010','50% 60%'],['873','0040','45% 40%'],['303','0075','60% 35%'],['44414','0075','50% 45%'],['33192','0040','50% 50%'],['40276','0040','45% 40%']];
 const st=document.querySelector('.strips');
 const names=['Сноуборд','Теннис','Бачата','Армрестлинг','Плавание','Бокс'];
-ids.forEach(([id,fr,pos],i)=>{const d=document.createElement('div');d.style.backgroundImage=m==='mob'?`url(../frames/${id}-n/${fr}.jpg)`:`url(img/${id}.jpg)`;d.style.backgroundPosition=m==='mob'?pos:'50% 40%';if(m!=='mob')d.innerHTML=`<span class="tag">${names[i]}</span>`;d.style.setProperty('--dy',(i%2?18:-18)+'px');st.appendChild(d);});
+ids.forEach(([id,fr,pos],i)=>{const d=document.createElement('div');const U={'7130':['snow1','50% 30%'],'873':['ten3','60% 40%'],'303':['dan2','50% 40%'],'44414':['arm1','45% 50%'],'33192':['sw1','50% 50%'],'40276':['box3','60% 35%']}[id];d.style.backgroundImage=`url(u/${U[0]}.jpg)`;d.style.backgroundPosition=U[1];d.innerHTML=`<span class="tag" style="position:absolute;left:14px;bottom:12px;padding:6px 14px;border-radius:999px;background:rgba(2,20,13,.75);color:#fff;font-weight:800;font-size:22px">${names[i]}</span>`;d.style.position='relative';d.style.setProperty('--dy',(i%2?18:-18)+'px');st.appendChild(d);});
 if(m==='mob'){st.style.cssText='position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,1fr);gap:12px;padding:12px;transform:none';[...st.children].forEach(d=>{d.style.borderRadius='26px';d.style.transform='none';});}
 const lg=document.getElementById('lg'); const s=m==='mob'?110:84; lg.style.width=lg.style.height=s+'px'; lg.style.borderRadius=s*.24+'px'; lg.innerHTML=LOGO_SVG(s*.7);
 document.fonts.load('900 50px Rubik').then(()=>window.READY=true);
