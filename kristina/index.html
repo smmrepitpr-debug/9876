@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Кристина Рэй — Здоровая спина</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+:root{--milk:#F3EEE7;--ink:#2A2A2A;--blue:#6C8EAD;--sand:#D9CFC3}
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:var(--milk);font-family:Montserrat,sans-serif;color:var(--ink)}
+.abs{position:absolute}
+/* бумажная фактура */
+#paper{position:absolute;inset:0;background:
+ radial-gradient(circle at 20% 15%,rgba(255,255,255,.6),transparent 40%),
+ repeating-linear-gradient(0deg,rgba(0,0,0,.012) 0 2px,transparent 2px 4px),var(--milk)}
+.shape{position:absolute;border-radius:50%}
+.hero{position:absolute;left:0;top:0;transform-origin:50% 100%;
+ filter:drop-shadow(5px 0 0 #fff) drop-shadow(-5px 0 0 #fff) drop-shadow(0 5px 0 #fff) drop-shadow(0 -5px 0 #fff) drop-shadow(0 22px 26px rgba(42,42,42,.22))}
+.t{position:absolute;left:70px;right:70px;text-align:center}
+.w{display:inline-block;will-change:transform;margin:0 .13em}
+.big{font-weight:800;font-size:104px;line-height:1.08;letter-spacing:-1px}
+.acc{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:600;color:var(--blue);font-size:120px;letter-spacing:0}
+.small{font-weight:600;font-size:46px;color:#5B5B5B}
+.icon{position:absolute;stroke:var(--ink);stroke-width:5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.chip{display:inline-block;padding:18px 38px;border-radius:999px;background:var(--ink);color:var(--milk);font-weight:800;font-size:52px;margin-top:14px!important}
+#fade{position:absolute;inset:0;background:var(--milk);opacity:0}
+</style></head>
+<body>
+<div id="paper"></div>
+<div class="shape" id="sh1" style="width:900px;height:900px;background:var(--sand)"></div>
+<div class="shape" id="sh2" style="width:520px;height:520px;background:rgba(108,142,173,.22)"></div>
+<svg class="abs" id="arc" width="1080" height="1920" style="left:0;top:0"><path id="arcp" d="M -40 1500 C 300 1300, 700 1700, 1120 1450" stroke="#6C8EAD" stroke-width="4" fill="none" stroke-dasharray="14 14" opacity=".5"/></svg>
+
+<!-- иконки -->
+<svg class="icon" id="laptop" width="260" height="200" viewBox="0 0 130 100"><rect x="20" y="12" width="90" height="58" rx="6"/><path d="M8 80 H122 L112 70 H18 Z"/><path d="M50 40 h30"/></svg>
+<svg class="icon" id="chair" width="220" height="260" viewBox="0 0 110 130"><path d="M30 10 V70 H85"/><path d="M30 70 V120 M85 70 V120"/><path d="M30 40 H70"/></svg>
+<svg class="abs" id="spine" width="260" height="760" viewBox="0 0 260 760"></svg>
+
+<img class="hero" id="h03" src="cut/kristina_03.png">
+<img class="hero" id="h02" src="cut/kristina_02.png">
+<img class="hero" id="h07" src="cut/kristina_07.png">
+<img class="hero" id="h06" src="cut/kristina_06.png">
+
+<div class="t" id="t1" style="top:210px"></div>
+<div class="t" id="t2" style="top:210px"></div>
+<div class="t" id="t3" style="top:190px"></div>
+<div class="t" id="t4" style="top:170px"></div>
+<div id="fade"></div>
+<script>
+const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),inv=(a,b,v)=>clamp((v-a)/(b-a)),lerp=(a,b,t)=>a+(b-a)*t;
+const eOut3=t=>1-Math.pow(1-t,3),eIO=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const spring=t=>t<=0?0:1-Math.exp(-7*t)*Math.cos(10*t);
+const $=s=>document.querySelector(s);
+const EVENTS=[];window.EVENTS=EVENTS;window.DURATION=10;window.VIDEO_NAME='kristina-zdorovaya-spina';
+// текстовые блоки: строки из слов; acc — курсив Cormorant
+function words(el,lines){el.innerHTML=lines.map(l=>`<div>${l.map(([w,c])=>`<span class="w ${c||'big'}">${w}</span>`).join(' ')}</div>`).join('');return [...el.querySelectorAll('.w')];}
+const T1=words($('#t1'),[[['Спина'],['болит']],[['после работы?','acc']]]);
+const T2=words($('#t2'),[[['Сидишь'],['8 часов','acc']],[['подряд']]]);
+const T3=words($('#t3'),[[['15 минут','acc'],['в день:']],[['МФР'],['и мягкая']],[['растяжка']],[['без инвентаря, прямо на коврике','small']]]);
+const T4=words($('#t4'),[[['Онлайн-клуб','small']],[['«Здоровая спина»','acc']],[['Напиши «СПИНА»','chip']],[['мне в личные сообщения','small']]]);
+[[0.05,T1],[2.15,T2],[4.65,T3],[7.65,T4]].forEach(([a,ws])=>ws.forEach((_,i)=>EVENTS.push({t:a+i*.3,type:'pop'})));
+[2.0,4.5,7.5].forEach(t=>EVENTS.push({t,type:'paper'}));
+function showWords(ws,a,b,t,step=.3){ws.forEach((w,i)=>{const p=spring(inv(a+i*step,a+i*step+.5,t)*1.1);const o=1-inv(b-.25,b,t);
+  w.style.opacity=clamp(p*3)*o;w.style.transform=`translateY(${(1-clamp(p))*40}px) scale(${lerp(.7,1,clamp(p))}) rotate(${(1-clamp(p))*(i%2?4:-4)}deg)`;});}
+// герой: [id, a, b, cx, bottom, height, вход]
+const HERO=[['#h03',0,2.05,560,1900,1300,'right'],['#h02',2.0,4.55,560,1900,1280,'left'],['#h07',4.5,7.55,540,1820,760,'up'],['#h06',7.5,10,540,1910,1180,'up']];
+const NAT={};
+function placeHero(t){HERO.forEach(([s,a,b,cx,bottom,h,from])=>{const e=$(s);if(!NAT[s])NAT[s]=[e.naturalWidth,e.naturalHeight];
+  const vis=t>=a&&t<b;e.style.display=vis?'block':'none';if(!vis)return;
+  const lt=t-a,p=spring(inv(a===0?-.35:0,a===0?.35:.7,lt)*1.05),out=inv(b-a-.25,b-a,lt),[nw,nh]=NAT[s],w=nw*h/nh;
+  const dx=from==='right'?(1-clamp(p))*700:from==='left'?-(1-clamp(p))*700:0,dy=from==='up'?(1-clamp(p))*500:0;
+  const sway=Math.sin(lt*2.2)*1.2, bob=Math.sin(lt*3)*6;
+  e.style.width=w+'px';e.style.height=h+'px';
+  e.style.transform=`translate(${cx-w/2+dx}px,${bottom-h+dy+bob}px) rotate(${sway+(1-clamp(p))*(from==='right'?8:-8)}deg) scale(${lerp(1,1.03,lt/(b-a))})`;
+  e.style.opacity=1-out;});}
+// позвоночник: 12 позвонков вдоль кривой, bend 1 = сутулость, 0 = ровно
+function spine(bend,glow,a){const n=12,sv=$('#spine');let h='';for(let i=0;i<n;i++){const q=i/(n-1),y=40+q*680,x=130+bend*120*Math.sin(q*Math.PI)-bend*40*q;
+  const ang=bend*30*Math.cos(q*Math.PI);h+=`<rect x="${x-34}" y="${y-22}" width="68" height="44" rx="14" transform="rotate(${ang} ${x} ${y})" fill="${glow?'rgba(108,142,173,'+(.25+.5*glow)+')':'none'}" stroke="${glow>.5?'#6C8EAD':'#2A2A2A'}" stroke-width="5"/>`;}
+  sv.innerHTML=h;sv.style.opacity=a;sv.style.filter=glow?`drop-shadow(0 0 ${18*glow}px rgba(108,142,173,.8))`:'none';}
+function seek(t){
+  t=clamp(t,0,9.999);
+  $('#sh1').style.transform=`translate(${-260+Math.sin(t*.4)*30}px,${820+Math.cos(t*.3)*20}px)`;
+  $('#sh2').style.transform=`translate(${700+Math.sin(t*.5)*40}px,${560+Math.sin(t*.6)*30}px)`;
+  $('#arcp').setAttribute('stroke-dashoffset',-t*40);
+  placeHero(t);
+  showWords(T1,.05,2.05,t);showWords(T2,2.15,4.55,t);showWords(T3,4.65,7.55,t,.25);showWords(T4,7.65,10.5,t);
+  // иконки проблемы
+  const ip=spring(inv(2.3,2.9,t)*1.05)*(1-inv(4.3,4.6,t));
+  $('#laptop').style.transform=`translate(${40-(1-clamp(ip))*300}px,${880+Math.sin(t*2)*6}px)`;$('#laptop').style.opacity=clamp(ip*2);
+  const cp=spring(inv(2.5,3.1,t)*1.05)*(1-inv(4.3,4.6,t));
+  $('#chair').style.transform=`translate(${60-(1-clamp(cp))*300}px,${1130}px)`;$('#chair').style.opacity=clamp(cp*2);
+  // позвоночник: сутулится в «проблеме», выпрямляется и светится в «решении»
+  const sa=inv(2.4,2.9,t)*(1-inv(7.3,7.6,t));const bend=t<4.5?eIO(inv(2.6,4.2,t)):1-eIO(inv(4.8,6.2,t));const glow=t>4.5?eOut3(inv(5.6,6.6,t)):0;
+  spine(bend,glow,sa);$('#spine').style.transform=`translate(${790+(1-sa)*300}px,${t<4.5?880:640}px) scale(.82)`;
+  $('#fade').style.opacity=inv(9.4,10,t);
+}
+window.seek=seek;
+Promise.all([document.fonts.load("800 50px Montserrat"),document.fonts.load("italic 600 50px 'Cormorant Garamond'"),document.fonts.load("500 50px Montserrat"),...[...document.images].map(i=>i.decode())]).then(()=>{
+  seek(0);window.READY=true;
+  if(!new URLSearchParams(location.search).get('render')){const t0=performance.now();(function L(){seek(((performance.now()-t0)/1000)%10);requestAnimationFrame(L)})();}
+});
+</script></body></html>
