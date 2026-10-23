@@ -1,0 +1,82 @@
+// Сценарии 5 научпоп-роликов Кристины Рэй. Тайминг общий: крючок 0–2.5, «почему» 2.5–8.3, «что делать» 8.3–18.2, клуб 18.2–22.8, «к врачу» 22.8–25.
+const NECK_CREDIT='Иллюстрация: Neck pain illustration, CC BY 4.0, Wikimedia Commons';
+const PELVIS_CREDIT='Иллюстрация: Merkel, Human Anatomy (1913), public domain';
+const VIDEOS=[
+{file:'01_sidyachaya_rabota',
+ hook:{hero:'k09',from:'right',top:600,lines:[['big','Сидишь 8 часов?'],['big','Вот что *со спиной*']]},
+ a:{lines:[['h2','Спина *«застывает»*'],['h2','в одной позе']],props:['chair','desk','floor'],
+   keys:[[0,'sitGood'],[1.0,'sitSlouch']],spine:[[0,'neutral'],[1.2,'tense']],
+   muscles:[{at:'lowerBack',state:'tense',t0:1.2,rx:30,ry:60},{at:'upperBack',state:'tense',t0:1.5,rx:26,ry:50}],
+   arrows:[{at:'upperBack',off:[-20,0],d:[-70,20],t0:1.6,col:'#C48B7C',grow:true}],
+   labels:[{at:'lowerBack',off:[-130,-30],text:'нагрузка',t0:1.8,dark:true}]},
+ b:{lines:[['h2','Мышцы бёдер'],['h2','и спины *забывают*'],['h2','работать']],props:['chair','floor'],
+   keys:[[0,'sitSlouch']],spine:[[0,'tense']],
+   muscles:[{at:'hip',state:'tense',t0:.4,rx:30,ry:70},{at:'glute',state:'weak',t0:.9,rx:28,ry:48},{at:'lowerBack',state:'tense',t0:.4,rx:28,ry:56}],
+   labels:[{at:'hip',off:[120,60],text:'бёдра',t0:1.0},{at:'glute',off:[-140,70],text:'ягодицы «спят»',t0:1.4,dark:true}]},
+ acts:[
+  {icon:'walk',lines:[['mid','Вставай и ходи'],['mid','*2 минуты* раз в час']],fig:{loop:['walk1','walk2'],period:1.1,props:['floor'],spine:[[0,'good']]}},
+  {icon:'stretch',lines:[['mid','Мягко растяни'],['mid','*бёдра*']],hero:'k05',from:'left',heroTop:640},
+  {icon:'ball',lines:[['mid','Разгрузочный'],['mid','*прогиб* на фитболе']],hero:'k21',from:'right',heroTop:700}],
+ clubHero:'k20'},
+
+{file:'02_sheya_i_telefon',
+ hook:{hero:'k13',from:'right',top:620,lines:[['big','Ты смотришь вниз?'],['big','*Шея* это замечает']]},
+ a:{lines:[['h2','Голова вперёд —'],['h2','шее *тяжелее*']],props:['phone','floor'],
+   keys:[[0,'standGood'],[.9,'phoneLook']],spine:[[0,'neutral'],[1.1,'tense']],
+   muscles:[{at:'neck',state:'tense',t0:1.1,rx:24,ry:50},{at:'S',state:'tense',t0:1.4,rx:26,ry:44}],
+   arrows:[{at:'head',off:[20,-10],d:[0,110],t0:1.3,col:'#C48B7C',grow:true}],
+   labels:[{at:'head',off:[-180,-40],text:'нагрузка растёт',t0:1.7,dark:true}]},
+ b:{lines:[['h2','Мышцы шеи'],['h2','и плеч *напряжены*']],keys:[[0,'phoneLook']],spine:[[0,'tense']],props:['floor'],
+   muscles:[{at:'neck',state:'tense',t0:.3,rx:26,ry:54},{at:'S',state:'tense',t0:.6,rx:28,ry:48}],
+   card:{src:'temy/web/neck.jpg',cap:'Напряжение в шее',credit:NECK_CREDIT,x:560,y:1180,w:440},
+   labels:[{at:'neck',off:[-150,-50],text:'шея',t0:.8},{at:'S',off:[-150,70],text:'плечи',t0:1.1}]},
+ acts:[
+  {icon:'screen',lines:[['mid','Подними экран'],['mid','*на уровень глаз*']],fig:{keys:[[0,'phoneLook'],[1.0,'phoneUp']],props:['phone','floor'],spine:[[0,'tense'],[1.2,'good']]}},
+  {icon:'head',lines:[['mid','Мягкие *повороты*'],['mid','и наклоны головы']],fig:{loop:['nodFwd','nodBack'],period:2,props:['floor'],spine:[[0,'good']],muscles:[{at:'neck',state:'good',t0:.3,rx:22,ry:44}]}},
+  {icon:'wind',lines:[['mid','Расслабь плечи'],['mid','на *выдохе*']],hero:'k12',from:'left',heroTop:700}],
+ clubHero:'k28'},
+
+{file:'03_poyasnitsa',
+ hook:{hero:'k09',from:'right',top:620,lines:[['big','Поясницу «стянуло»'],['big','после *выходных?*']]},
+ a:{lines:[['h2','Мышцы вокруг'],['h2','поясницы *зажаты*']],props:['floor'],keys:[[0,'standGood'],[1.0,'standSlouch']],spine:[[0,'neutral'],[1.2,'tense']],
+   muscles:[{at:'lowerBack',state:'tense',t0:1.2,rx:30,ry:62},{at:'hip',state:'tense',t0:1.6,rx:28,ry:60}],
+   labels:[{at:'lowerBack',off:[-150,-10],text:'поясница',t0:1.6,dark:true}]},
+ b:{lines:[['h2','Мягкое движение'],['h2','в комфортном'],['h2','диапазоне *помогает*']],keys:[[0,'standSlouch']],spine:[[0,'tense']],props:['floor'],
+   muscles:[{at:'lowerBack',state:'tense',t0:.3,rx:30,ry:60},{at:'hip',state:'tense',t0:.6,rx:28,ry:60}],
+   card:{src:'temy/web/pelvis.jpg',cap:'Мышцы поясницы и таза',credit:PELVIS_CREDIT,x:600,y:1080,w:420}},
+ acts:[
+  {icon:'walk',lines:[['mid','Короткая *ходьба*']],fig:{loop:['walk1','walk2'],period:1.1,props:['floor'],spine:[[0,'good']]}},
+  {icon:'cat',lines:[['mid','Мягкое'],['mid','*«кошка-корова»*']],fig:{loop:['cat','cow'],period:2.4,props:['mat'],spine:[[0,'good']]}},
+  {icon:'wind',lines:[['mid','Дыши *спокойно*'],['mid','в комфортном темпе']],hero:'k28',from:'right',heroTop:700}],
+ clubHero:'k20',
+ disc:[['mid','Если боль резкая,'],['mid','отдаёт в ногу'],['mid','или есть онемение,'],['mid','*к врачу*']]},
+
+{file:'04_sutulost',
+ hook:{hero:'k12',from:'right',top:620,lines:[['big','Плечи уезжают'],['big','вперёд? Это можно'],['big','*мягко вернуть*']]},
+ a:{lines:[['h2','Сутулость:'],['h2','одни мышцы *зажаты*,'],['h2','другие ослабли']],props:['floor'],keys:[[0,'standGood'],[1.0,'standSlouch']],spine:[[0,'neutral'],[1.2,'tense']],
+   muscles:[{at:'chest',state:'tense',t0:1.3,rx:28,ry:50},{at:'upperBack',state:'weak',t0:1.6,rx:26,ry:56}],
+   labels:[{at:'chest',off:[120,40],text:'грудь зажата',t0:1.5},{at:'upperBack',off:[-150,-30],text:'спина слабее',t0:1.9,dark:true}]},
+ b:{lines:[['h2','Грудь *сжата* —'],['h2','спине нечем'],['h2','тянуть плечи назад']],keys:[[0,'standSlouch'],[2.0,'standGood']],props:['floor'],
+   spine:[[0,'tense'],[2.0,'good']],muscles:[{at:'chest',state:'tense',t0:.3,rx:28,ry:50},{at:'upperBack',state:'weak',t0:.6,rx:26,ry:56}],
+   arrows:[{at:'S',off:[-10,0],d:[-90,0],t0:2.1,col:'#6C8EAD',grow:true}]},
+ acts:[
+  {icon:'wall',lines:[['mid','Открой *грудь*'],['mid','у стены']],fig:{keys:[[0,'wallClosed'],[1.0,'wallOpen']],props:['wall','floor'],spine:[[0,'tense'],[1.4,'good']]}},
+  {icon:'band',lines:[['mid','Тяга *резинкой*'],['mid','к себе']],hero:'k08',from:'left',heroTop:600},
+  {icon:'up',lines:[['mid','*Выпрямляйся*'],['mid','на фитболе']],hero:'k20',from:'right',heroTop:700}],
+ clubHero:'k28'},
+
+{file:'05_yagoditsy_i_spina',
+ hook:{hero:'k07',from:'right',top:620,lines:[['big','Спина устаёт?'],['big','Помогать должны'],['big','*ягодицы*']]},
+ a:{lines:[['h2','Работают ягодицы —'],['h2','*меньше* нагрузка'],['h2','на поясницу']],props:['mat'],keys:[[0,'bridgeDown'],[1.2,'bridgeUp']],spine:[[0,'neutral'],[1.4,'good']],
+   muscles:[{at:'glute',state:'good',t0:1.4,rx:30,ry:50}],
+   arrows:[{at:'P',off:[0,-20],d:[0,-90],t0:1.6,col:'#6C8EAD',grow:true}],
+   labels:[{at:'glute',off:[40,-120],text:'ягодицы',t0:1.8,dark:true}]},
+ b:{lines:[['h2','Таз *держит* —'],['h2','поясница отдыхает']],keys:[[0,'bridgeUp']],props:['mat'],spine:[[0,'good']],
+   muscles:[{at:'glute',state:'good',t0:.3,rx:30,ry:50}],
+   card:{src:'temy/web/pelvis.jpg',cap:'Мышцы таза',credit:PELVIS_CREDIT,x:600,y:1080,w:420}},
+ acts:[
+  {icon:'bridge',lines:[['mid','*Ягодичный мост*'],['mid','в комфортном темпе']],fig:{loop:['bridgeDown','bridgeUp'],period:2.4,props:['mat'],spine:[[0,'good']],muscles:[{at:'glute',state:'good',t0:.3,rx:28,ry:46}]}},
+  {icon:'stretch',lines:[['mid','Мягко растяни'],['mid','*бёдра*']],hero:'k18',from:'left',heroTop:760},
+  {icon:'walk',lines:[['mid','Вставай и *разминайся*']],fig:{loop:['walk1','walk2'],period:1.1,props:['floor'],spine:[[0,'good']]}}],
+ clubHero:'k20'}
+];

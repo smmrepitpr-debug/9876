@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Кристина Рэй — научпоп про спину</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+:root{--milk:#F3EEE7;--ink:#2A2A2A;--blue:#6C8EAD;--sand:#D9CFC3;--rose:#C48B7C}
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:var(--milk);font-family:Montserrat,sans-serif;color:var(--ink)}
+#paper{position:absolute;inset:0;background:radial-gradient(circle at 20% 15%,rgba(255,255,255,.6),transparent 40%),repeating-linear-gradient(0deg,rgba(0,0,0,.012) 0 2px,transparent 2px 4px),var(--milk)}
+.shape{position:absolute;border-radius:50%;left:0;top:0}
+.scene{position:absolute;inset:0;display:none}
+.hero{position:absolute;left:0;top:0;transform-origin:50% 100%;
+ filter:drop-shadow(5px 0 0 #fff) drop-shadow(-5px 0 0 #fff) drop-shadow(0 5px 0 #fff) drop-shadow(0 -5px 0 #fff) drop-shadow(0 22px 26px rgba(42,42,42,.22))}
+.t{position:absolute;left:50px;right:50px;text-align:center}
+.t>div{white-space:nowrap}
+.w{display:inline-block;margin:0 .12em}
+.big{font-weight:800;font-size:100px;line-height:1.1;letter-spacing:-1px}
+.h2{font-weight:800;font-size:84px;line-height:1.12;letter-spacing:-.5px}
+.mid{font-weight:700;font-size:64px;line-height:1.2}
+.small{font-weight:700;font-size:52px;color:#5B5B5B;line-height:1.3}
+.acc{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:600;color:var(--blue);font-size:1.18em;letter-spacing:0}
+.chip{display:inline-block;padding:18px 40px;border-radius:999px;background:var(--ink);color:var(--milk);font-weight:800;font-size:60px;margin-top:16px}
+.badge{position:absolute;left:70px;top:150px;width:130px;height:130px;border-radius:50%;background:var(--blue);color:var(--milk);font-weight:800;font-size:76px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(42,42,42,.18)}
+.ico{position:absolute;right:70px;top:150px;width:130px;height:130px;border-radius:50%;background:#fff;box-shadow:0 10px 24px rgba(42,42,42,.12)}
+.ico svg{width:130px;height:130px;stroke:var(--ink);stroke-width:5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.steps{position:absolute;left:0;right:0;top:300px;text-align:center;font-weight:700;font-size:34px;color:#8A8A8A;letter-spacing:4px}
+.card{position:absolute;background:#fff;padding:16px 16px 0;box-shadow:0 18px 30px rgba(42,42,42,.18)}
+.card img{display:block;width:100%;filter:sepia(.18) saturate(.75) contrast(.95)}
+.card .cap{font-weight:700;font-size:30px;color:var(--ink);padding:12px 4px 14px;text-align:center}
+.credit{position:absolute;left:40px;bottom:26px;font-weight:500;font-size:22px;color:#9A938A}
+svg.fig{position:absolute;left:0;top:0;overflow:visible}
+#fade{position:absolute;inset:0;background:var(--milk);opacity:0}
+</style></head>
+<body>
+<div id="paper"></div>
+<div class="shape" id="sh1" style="width:900px;height:900px;background:var(--sand)"></div>
+<div class="shape" id="sh2" style="width:520px;height:520px;background:rgba(108,142,173,.20)"></div>
+<svg style="position:absolute;left:0;top:0" width="1080" height="1920"><path id="arcp" d="M -40 1560 C 300 1360, 700 1760, 1120 1500" stroke="#6C8EAD" stroke-width="4" fill="none" stroke-dasharray="14 14" opacity=".45"/></svg>
+<div id="stage"></div>
+<div id="fade"></div>
+<script src="np-videos.js"></script>
+<script src="np.js"></script>
+</body></html>
